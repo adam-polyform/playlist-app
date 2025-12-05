@@ -1,14 +1,22 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
+
+// Serve static files from the dist folder
+app.use(express.static(join(__dirname, 'dist')));
 
 // Analyze image with Claude Vision API
 app.post('/api/analyze-image', async (req, res) => {
@@ -189,6 +197,11 @@ app.post('/api/search-tracks', async (req, res) => {
     console.error('Error searching tracks:', error);
     res.status(500).json({ error: 'Failed to search tracks: ' + error.message });
   }
+});
+
+// Serve index.html for all other routes (SPA support)
+app.get('/{*path}', (req, res) => {
+  res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
