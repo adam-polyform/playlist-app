@@ -18,6 +18,21 @@ app.use(express.json({ limit: '10mb' }));
 // Serve static files from the dist folder
 app.use(express.static(join(__dirname, 'dist')));
 
+// Extract media type from base64 data URL
+function getMediaType(dataUrl) {
+  const match = dataUrl.match(/^data:(image\/\w+);base64,/);
+  if (match) {
+    const type = match[1];
+    // Map common types (Claude API supports jpeg, png, gif, webp)
+    if (['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(type)) {
+      return type;
+    }
+    // For unsupported formats like avif, default to jpeg
+    return 'image/jpeg';
+  }
+  return 'image/jpeg';
+}
+
 // Analyze image with Claude Vision API
 app.post('/api/analyze-image', async (req, res) => {
   try {
@@ -26,6 +41,8 @@ app.post('/api/analyze-image', async (req, res) => {
     if (!process.env.ANTHROPIC_API_KEY) {
       return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
     }
+
+    const mediaType = getMediaType(imageData);
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -45,8 +62,8 @@ app.post('/api/analyze-image', async (req, res) => {
                 type: 'image',
                 source: {
                   type: 'base64',
-                  media_type: imageData.startsWith('data:image/png') ? 'image/png' : 'image/jpeg',
-                  data: imageData.replace(/^data:image\/\w+;base64,/, '')
+                  media_type: mediaType,
+                  data: imageData.replace(/^data:image\/[\w+]+;base64,/, '')
                 }
               },
               {
