@@ -3,7 +3,8 @@ import PhotoCapture from './components/PhotoCapture';
 import PlaylistDisplay from './components/PlaylistDisplay';
 import './App.css';
 
-const API_URL = 'http://localhost:3001';
+// Use the same host as the frontend, but on port 3001
+const API_URL = `${window.location.protocol}//${window.location.hostname}:3001`;
 
 function App() {
   const [imagePreview, setImagePreview] = useState(null);
