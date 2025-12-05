@@ -7,12 +7,46 @@ function PhotoCapture({ onPhotoCapture, disabled }) {
   const [showCamera, setShowCamera] = useState(false);
   const [stream, setStream] = useState(null);
 
+  // Supported formats by Claude API
+  const supportedFormats = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+  // Convert image to JPEG if it's not a supported format
+  const convertToSupportedFormat = (dataUrl, file) => {
+    return new Promise((resolve) => {
+      const fileType = file.type;
+
+      // If already a supported format, use as-is
+      if (supportedFormats.includes(fileType)) {
+        resolve(dataUrl);
+        return;
+      }
+
+      // Convert unsupported formats (like AVIF) to JPEG
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        resolve(jpegDataUrl);
+      };
+      img.onerror = () => {
+        // If conversion fails, try to use original
+        resolve(dataUrl);
+      };
+      img.src = dataUrl;
+    });
+  };
+
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (event) => {
-        onPhotoCapture(event.target.result);
+      reader.onload = async (event) => {
+        const convertedData = await convertToSupportedFormat(event.target.result, file);
+        onPhotoCapture(convertedData);
       };
       reader.readAsDataURL(file);
     }
