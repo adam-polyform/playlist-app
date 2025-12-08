@@ -80,16 +80,6 @@
     inset 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
-.upload-icon {
-  margin-bottom: 1.25rem;
-  color: #86868b;
-}
-
-.upload-icon svg {
-  display: block;
-  margin: 0 auto;
-}
-
 .upload-area p {
   margin: 0;
   font-size: 1.0625rem;
