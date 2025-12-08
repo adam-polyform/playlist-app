@@ -1,10 +1,10 @@
 :root {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color: #e2e8f0;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+  color: #1d1d1f;
+  background: #F1F3F6;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -19,20 +19,45 @@
 body {
   margin: 0;
   min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Large blurred gradient sphere background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140vmax;
+  height: 140vmax;
+  background: radial-gradient(
+    circle,
+    #F1F3F6 0%,
+    #BCBFCC 50%,
+    #9DA2B3 100%
+  );
+  filter: blur(80px);
+  z-index: -1;
+  pointer-events: none;
 }
 
 #root {
   min-height: 100vh;
+  position: relative;
+  z-index: 1;
 }
 
 a {
   font-weight: 500;
-  color: #1DB954;
+  color: #61626D;
   text-decoration: none;
+  transition: opacity 0.2s ease;
 }
 
 a:hover {
-  color: #1ed760;
+  opacity: 0.7;
 }
 
 button {

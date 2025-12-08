@@ -73,8 +73,18 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>📸 Photo Playlist</h1>
-        <p>Upload a photo and get a personalized music playlist</p>
+        <div className="logo">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="20" r="18" stroke="#61626D" strokeWidth="2"/>
+            <circle cx="20" cy="20" r="6" fill="#61626D"/>
+            <path d="M20 8V14" stroke="#61626D" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M20 26V32" stroke="#61626D" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M8 20H14" stroke="#61626D" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M26 20H32" stroke="#61626D" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </div>
+        <h1>Moodlist</h1>
+        <p>Transform any image into a playlist</p>
       </header>
 
       <main className="app-main">
@@ -91,7 +101,7 @@ function App() {
 
         {error && (
           <div className="error-state">
-            <p>❌ {error}</p>
+            <p>{error}</p>
             <button onClick={handleReset}>Try Again</button>
           </div>
         )}
@@ -104,14 +114,14 @@ function App() {
               imagePreview={imagePreview}
             />
             <button className="reset-button" onClick={handleReset}>
-              Create Another Playlist
+              Create Another
             </button>
           </>
         )}
       </main>
 
       <footer className="app-footer">
-        <p>Powered by Claude AI & Spotify</p>
+        <p>Powered by Claude & Spotify</p>
       </footer>
     </div>
   );
