@@ -89,9 +89,12 @@ function PhotoCapture({ onPhotoCapture, disabled }) {
     <div className="photo-capture">
       {!showCamera ? (
         <div className="capture-options">
-          <div className="upload-area" onClick={() => !disabled && fileInputRef.current.click()}>
-            <p>Click to upload a photo</p>
-            <span className="upload-hint">or drag and drop</span>
+          <div className="upload-wrapper">
+            <div className="gradient-blob gradient-blob-upload"></div>
+            <div className="upload-area" onClick={() => !disabled && fileInputRef.current.click()}>
+              <p>Click to upload a photo</p>
+              <span className="upload-hint">or drag and drop</span>
+            </div>
           </div>
           <input
             ref={fileInputRef}
@@ -101,13 +104,16 @@ function PhotoCapture({ onPhotoCapture, disabled }) {
             disabled={disabled}
             style={{ display: 'none' }}
           />
-          <button
-            className="camera-button"
-            onClick={startCamera}
-            disabled={disabled}
-          >
-            Take a Photo
-          </button>
+          <div className="button-wrapper">
+            <div className="gradient-blob gradient-blob-button"></div>
+            <button
+              className="camera-button"
+              onClick={startCamera}
+              disabled={disabled}
+            >
+              Take a Photo
+            </button>
+          </div>
         </div>
       ) : (
         <div className="camera-view">
