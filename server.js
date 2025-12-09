@@ -223,9 +223,13 @@ app.post('/api/search-tracks', async (req, res) => {
 // Spotify OAuth - Start authorization
 app.get('/auth/spotify', (req, res) => {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
-  const redirectUri = `${req.protocol}://${req.get('host')}/auth/spotify/callback`;
+  // Use x-forwarded-proto header for apps behind a proxy (like Render)
+  const protocol = req.get('x-forwarded-proto') || req.protocol;
+  const redirectUri = `${protocol}://${req.get('host')}/auth/spotify/callback`;
   const state = crypto.randomBytes(16).toString('hex');
   const scope = 'playlist-modify-public playlist-modify-private user-read-private';
+
+  console.log('Redirect URI:', redirectUri); // Debug log
 
   const params = new URLSearchParams({
     response_type: 'code',
@@ -249,7 +253,9 @@ app.get('/auth/spotify/callback', async (req, res) => {
   try {
     const clientId = process.env.SPOTIFY_CLIENT_ID;
     const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-    const redirectUri = `${req.protocol}://${req.get('host')}/auth/spotify/callback`;
+    // Use x-forwarded-proto header for apps behind a proxy (like Render)
+    const protocol = req.get('x-forwarded-proto') || req.protocol;
+    const redirectUri = `${protocol}://${req.get('host')}/auth/spotify/callback`;
 
     const response = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',
