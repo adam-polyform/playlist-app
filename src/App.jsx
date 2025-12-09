@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import PhotoCapture from './components/PhotoCapture';
 import PlaylistDisplay from './components/PlaylistDisplay';
+import HeroGraphic from './components/HeroGraphic';
 import './App.css';
 
 // API is served from the same origin
@@ -127,16 +128,7 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <div className="logo">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="20" cy="20" r="18" stroke="#61626D" strokeWidth="2"/>
-            <circle cx="20" cy="20" r="6" fill="#61626D"/>
-            <path d="M20 8V14" stroke="#61626D" strokeWidth="2" strokeLinecap="round"/>
-            <path d="M20 26V32" stroke="#61626D" strokeWidth="2" strokeLinecap="round"/>
-            <path d="M8 20H14" stroke="#61626D" strokeWidth="2" strokeLinecap="round"/>
-            <path d="M26 20H32" stroke="#61626D" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </div>
+        <HeroGraphic />
         <h1>Moodlist</h1>
         <p>Transform any image into a playlist</p>
       </header>
