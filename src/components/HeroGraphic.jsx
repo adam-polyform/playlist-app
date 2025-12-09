@@ -35,16 +35,28 @@ function HeroGraphic() {
         <div className="flow-particle"></div>
       </div>
 
-      {/* Center logo */}
+      {/* Center logo - Cassette tape */}
       <div className="hero-logo">
-        <svg width="64" height="64" viewBox="0 0 40 40" fill="none">
-          <circle cx="20" cy="20" r="18" stroke="#61626D" strokeWidth="2"/>
-          <circle cx="20" cy="20" r="6" fill="#61626D"/>
-          <path d="M20 8V14" stroke="#61626D" strokeWidth="2" strokeLinecap="round"/>
-          <path d="M20 26V32" stroke="#61626D" strokeWidth="2" strokeLinecap="round"/>
-          <path d="M8 20H14" stroke="#61626D" strokeWidth="2" strokeLinecap="round"/>
-          <path d="M26 20H32" stroke="#61626D" strokeWidth="2" strokeLinecap="round"/>
+        <svg width="72" height="48" viewBox="0 0 72 48" fill="none">
+          {/* Cassette body */}
+          <rect x="2" y="4" width="68" height="40" rx="4" stroke="#61626D" strokeWidth="2" fill="none"/>
+          {/* Top label area */}
+          <rect x="8" y="8" width="56" height="16" rx="2" fill="rgba(97, 98, 109, 0.1)" stroke="#61626D" strokeWidth="1.5"/>
+          {/* Left reel */}
+          <circle cx="22" cy="16" r="6" stroke="#61626D" strokeWidth="1.5" fill="none"/>
+          <circle cx="22" cy="16" r="2" fill="#61626D"/>
+          {/* Right reel */}
+          <circle cx="50" cy="16" r="6" stroke="#61626D" strokeWidth="1.5" fill="none"/>
+          <circle cx="50" cy="16" r="2" fill="#61626D"/>
+          {/* Tape window */}
+          <rect x="14" y="28" width="44" height="10" rx="2" stroke="#61626D" strokeWidth="1.5" fill="none"/>
+          {/* Reel holes */}
+          <circle cx="22" cy="33" r="3" stroke="#61626D" strokeWidth="1.5" fill="none"/>
+          <circle cx="50" cy="33" r="3" stroke="#61626D" strokeWidth="1.5" fill="none"/>
+          {/* Tape line */}
+          <path d="M25 33 L47 33" stroke="#61626D" strokeWidth="1" strokeDasharray="2 2"/>
         </svg>
+        <span className="hero-wordmark">Moodlist</span>
       </div>
 
       {/* Flow lines going out */}
