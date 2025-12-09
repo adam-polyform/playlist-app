@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import PhotoCapture from './components/PhotoCapture';
 import PlaylistDisplay from './components/PlaylistDisplay';
 import './App.css';
@@ -13,6 +13,60 @@ function App() {
   const [analysis, setAnalysis] = useState(null);
   const [tracks, setTracks] = useState([]);
   const [error, setError] = useState(null);
+  const [spotifyUser, setSpotifyUser] = useState(null);
+
+  // Handle OAuth callback and check user status on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionToken = urlParams.get('spotify_session');
+    const authError = urlParams.get('auth_error');
+
+    if (authError) {
+      setError(`Spotify login failed: ${authError}`);
+      window.history.replaceState({}, '', '/');
+    } else if (sessionToken) {
+      localStorage.setItem('spotify_session', sessionToken);
+      window.history.replaceState({}, '', '/');
+    }
+
+    // Check if user is already logged in
+    const storedSession = localStorage.getItem('spotify_session');
+    if (storedSession) {
+      checkUserStatus(storedSession);
+    }
+  }, []);
+
+  const checkUserStatus = async (sessionToken) => {
+    try {
+      const response = await fetch(`${API_URL}/api/user-status`, {
+        headers: { 'x-spotify-session': sessionToken }
+      });
+      const data = await response.json();
+      if (data.authenticated) {
+        setSpotifyUser(data);
+      } else {
+        localStorage.removeItem('spotify_session');
+      }
+    } catch (err) {
+      console.error('Failed to check user status:', err);
+    }
+  };
+
+  const handleSpotifyLogin = () => {
+    window.location.href = '/auth/spotify';
+  };
+
+  const handleSpotifyLogout = async () => {
+    const sessionToken = localStorage.getItem('spotify_session');
+    if (sessionToken) {
+      await fetch(`${API_URL}/api/logout`, {
+        method: 'POST',
+        headers: { 'x-spotify-session': sessionToken }
+      });
+    }
+    localStorage.removeItem('spotify_session');
+    setSpotifyUser(null);
+  };
 
   const handlePhotoCapture = async (imageData) => {
     setImagePreview(imageData);
@@ -112,6 +166,8 @@ function App() {
               analysis={analysis}
               tracks={tracks}
               imagePreview={imagePreview}
+              spotifyUser={spotifyUser}
+              onSpotifyLogin={handleSpotifyLogin}
             />
             <button className="reset-button" onClick={handleReset}>
               Create Another

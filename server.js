@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -11,6 +12,9 @@ const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Store user tokens in memory (in production, use a database/session store)
+const userTokens = new Map();
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -214,6 +218,212 @@ app.post('/api/search-tracks', async (req, res) => {
     console.error('Error searching tracks:', error);
     res.status(500).json({ error: 'Failed to search tracks: ' + error.message });
   }
+});
+
+// Spotify OAuth - Start authorization
+app.get('/auth/spotify', (req, res) => {
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const redirectUri = `${req.protocol}://${req.get('host')}/auth/spotify/callback`;
+  const state = crypto.randomBytes(16).toString('hex');
+  const scope = 'playlist-modify-public playlist-modify-private user-read-private';
+
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id: clientId,
+    scope: scope,
+    redirect_uri: redirectUri,
+    state: state
+  });
+
+  res.redirect(`https://accounts.spotify.com/authorize?${params.toString()}`);
+});
+
+// Spotify OAuth - Handle callback
+app.get('/auth/spotify/callback', async (req, res) => {
+  const { code, error } = req.query;
+
+  if (error) {
+    return res.redirect('/?auth_error=' + encodeURIComponent(error));
+  }
+
+  try {
+    const clientId = process.env.SPOTIFY_CLIENT_ID;
+    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+    const redirectUri = `${req.protocol}://${req.get('host')}/auth/spotify/callback`;
+
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Basic ' + Buffer.from(clientId + ':' + clientSecret).toString('base64')
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: redirectUri
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      return res.redirect('/?auth_error=' + encodeURIComponent(data.error_description || data.error));
+    }
+
+    // Get user profile
+    const profileResponse = await fetch('https://api.spotify.com/v1/me', {
+      headers: { 'Authorization': `Bearer ${data.access_token}` }
+    });
+    const profile = await profileResponse.json();
+
+    // Generate a session token
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+
+    // Store user data
+    userTokens.set(sessionToken, {
+      accessToken: data.access_token,
+      refreshToken: data.refresh_token,
+      expiresAt: Date.now() + (data.expires_in * 1000),
+      userId: profile.id,
+      displayName: profile.display_name
+    });
+
+    // Redirect back to app with session token
+    res.redirect(`/?spotify_session=${sessionToken}`);
+  } catch (error) {
+    console.error('OAuth callback error:', error);
+    res.redirect('/?auth_error=callback_failed');
+  }
+});
+
+// Check user authentication status
+app.get('/api/user-status', (req, res) => {
+  const sessionToken = req.headers['x-spotify-session'];
+
+  if (!sessionToken || !userTokens.has(sessionToken)) {
+    return res.json({ authenticated: false });
+  }
+
+  const userData = userTokens.get(sessionToken);
+  res.json({
+    authenticated: true,
+    displayName: userData.displayName,
+    userId: userData.userId
+  });
+});
+
+// Refresh token if needed
+async function refreshTokenIfNeeded(sessionToken) {
+  const userData = userTokens.get(sessionToken);
+  if (!userData) return null;
+
+  // Refresh if token expires within 5 minutes
+  if (userData.expiresAt - Date.now() < 5 * 60 * 1000) {
+    try {
+      const clientId = process.env.SPOTIFY_CLIENT_ID;
+      const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+
+      const response = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' + Buffer.from(clientId + ':' + clientSecret).toString('base64')
+        },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: userData.refreshToken
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.error) {
+        userData.accessToken = data.access_token;
+        userData.expiresAt = Date.now() + (data.expires_in * 1000);
+        if (data.refresh_token) {
+          userData.refreshToken = data.refresh_token;
+        }
+        userTokens.set(sessionToken, userData);
+      }
+    } catch (error) {
+      console.error('Token refresh error:', error);
+    }
+  }
+
+  return userData;
+}
+
+// Create playlist and add tracks
+app.post('/api/create-playlist', async (req, res) => {
+  const sessionToken = req.headers['x-spotify-session'];
+  const { name, description, trackUris } = req.body;
+
+  if (!sessionToken) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  const userData = await refreshTokenIfNeeded(sessionToken);
+  if (!userData) {
+    return res.status(401).json({ error: 'Session expired' });
+  }
+
+  try {
+    // Create playlist
+    const createResponse = await fetch(
+      `https://api.spotify.com/v1/users/${userData.userId}/playlists`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${userData.accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: name || 'Moodlist Playlist',
+          description: description || 'Created with Moodlist',
+          public: false
+        })
+      }
+    );
+
+    const playlist = await createResponse.json();
+
+    if (playlist.error) {
+      return res.status(400).json({ error: playlist.error.message });
+    }
+
+    // Add tracks to playlist
+    if (trackUris && trackUris.length > 0) {
+      await fetch(
+        `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${userData.accessToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ uris: trackUris })
+        }
+      );
+    }
+
+    res.json({
+      success: true,
+      playlistId: playlist.id,
+      playlistUrl: playlist.external_urls.spotify
+    });
+  } catch (error) {
+    console.error('Create playlist error:', error);
+    res.status(500).json({ error: 'Failed to create playlist' });
+  }
+});
+
+// Logout
+app.post('/api/logout', (req, res) => {
+  const sessionToken = req.headers['x-spotify-session'];
+  if (sessionToken) {
+    userTokens.delete(sessionToken);
+  }
+  res.json({ success: true });
 });
 
 // Serve index.html for all other routes (SPA support)
