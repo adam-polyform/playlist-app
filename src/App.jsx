@@ -30,6 +30,23 @@ function App() {
       window.history.replaceState({}, '', '/');
     }
 
+    // Restore playlist state if returning from OAuth
+    const savedPlaylistState = localStorage.getItem('pending_playlist');
+    if (savedPlaylistState) {
+      try {
+        const { tracks: savedTracks, analysis: savedAnalysis, imagePreview: savedImage } = JSON.parse(savedPlaylistState);
+        if (savedTracks && savedTracks.length > 0) {
+          setTracks(savedTracks);
+          setAnalysis(savedAnalysis);
+          setImagePreview(savedImage);
+        }
+      } catch (e) {
+        console.error('Failed to restore playlist state:', e);
+      }
+      // Clear the saved state after restoring
+      localStorage.removeItem('pending_playlist');
+    }
+
     // Check if user is already logged in
     const storedSession = localStorage.getItem('spotify_session');
     if (storedSession) {
@@ -54,6 +71,14 @@ function App() {
   };
 
   const handleSpotifyLogin = () => {
+    // Save current playlist state before redirecting to OAuth
+    if (tracks.length > 0) {
+      localStorage.setItem('pending_playlist', JSON.stringify({
+        tracks,
+        analysis,
+        imagePreview
+      }));
+    }
     window.location.href = '/auth/spotify';
   };
 
