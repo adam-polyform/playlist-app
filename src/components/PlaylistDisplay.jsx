@@ -3,25 +3,15 @@ import './PlaylistDisplay.css';
 
 function PlaylistDisplay({ analysis, tracks, imagePreview, spotifyUser, onSpotifyLogin }) {
   const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
-  const [audio] = useState(new Audio());
   const [saving, setSaving] = useState(false);
   const [savedPlaylist, setSavedPlaylist] = useState(null);
   const [saveError, setSaveError] = useState(null);
 
-  const playPreview = (track) => {
-    if (!track.previewUrl) {
-      window.open(track.spotifyUrl, '_blank');
-      return;
-    }
-
+  const togglePlay = (track) => {
     if (currentlyPlaying === track.id) {
-      audio.pause();
       setCurrentlyPlaying(null);
     } else {
-      audio.src = track.previewUrl;
-      audio.play();
       setCurrentlyPlaying(track.id);
-      audio.onended = () => setCurrentlyPlaying(null);
     }
   };
 
@@ -90,35 +80,50 @@ function PlaylistDisplay({ analysis, tracks, imagePreview, spotifyUser, onSpotif
 
       <div className="tracks-list">
         {tracks.map((track, index) => (
-          <div key={track.id} className="track-item">
-            <span className="track-number">{index + 1}</span>
-            <img
-              src={track.albumArt}
-              alt={track.album}
-              className="track-album-art"
-            />
-            <div className="track-info">
-              <p className="track-name">{track.name}</p>
-              <p className="track-artist">{track.artist}</p>
+          <div key={track.id} className={`track-item ${currentlyPlaying === track.id ? 'expanded' : ''}`}>
+            <div className="track-row">
+              <span className="track-number">{index + 1}</span>
+              <img
+                src={track.albumArt}
+                alt={track.album}
+                className="track-album-art"
+              />
+              <div className="track-info">
+                <p className="track-name">{track.name}</p>
+                <p className="track-artist">{track.artist}</p>
+              </div>
+              <div className="track-actions">
+                <button
+                  className={`play-button ${currentlyPlaying === track.id ? 'playing' : ''}`}
+                  onClick={() => togglePlay(track)}
+                  title="Play in Spotify"
+                >
+                  {currentlyPlaying === track.id ? '✕' : '▶'}
+                </button>
+                <button
+                  className="spotify-button"
+                  onClick={() => openInSpotify(track)}
+                  title="Open in Spotify"
+                >
+                  <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div className="track-actions">
-              <button
-                className={`play-button ${currentlyPlaying === track.id ? 'playing' : ''}`}
-                onClick={() => playPreview(track)}
-                title={track.previewUrl ? 'Play preview' : 'Open in Spotify'}
-              >
-                {currentlyPlaying === track.id ? '⏸' : '▶'}
-              </button>
-              <button
-                className="spotify-button"
-                onClick={() => openInSpotify(track)}
-                title="Open in Spotify"
-              >
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path fill="currentColor" d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-                </svg>
-              </button>
-            </div>
+            {currentlyPlaying === track.id && (
+              <div className="spotify-embed">
+                <iframe
+                  src={`https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0`}
+                  width="100%"
+                  height="152"
+                  frameBorder="0"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  title={`Play ${track.name}`}
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>

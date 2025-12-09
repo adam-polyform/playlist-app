@@ -90,16 +90,32 @@
 }
 
 .track-item {
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.track-item.expanded {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.track-row {
   display: flex;
   align-items: center;
   gap: 0.875rem;
   padding: 0.75rem;
-  border-radius: 12px;
-  transition: all 0.2s ease;
 }
 
-.track-item:hover {
+.track-item:hover .track-row {
   background: rgba(0, 0, 0, 0.03);
+}
+
+.spotify-embed {
+  padding: 0 0.75rem 0.75rem;
+}
+
+.spotify-embed iframe {
+  border-radius: 12px;
 }
 
 .track-number {
