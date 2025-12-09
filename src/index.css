@@ -3,8 +3,8 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color: #1d1d1f;
-  background: #FFFFFF;
+  color: #ffffff;
+  background: #0a0a0a;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -21,7 +21,7 @@ body {
   min-height: 100vh;
   position: relative;
   overflow-x: hidden;
-  background: #FFFFFF;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0f0f0f 100%);
 }
 
 #root {
@@ -32,13 +32,14 @@ body {
 
 a {
   font-weight: 500;
-  color: #61626D;
+  color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   transition: opacity 0.2s ease;
 }
 
 a:hover {
-  opacity: 0.7;
+  opacity: 0.9;
+  color: #ffffff;
 }
 
 button {
