@@ -129,8 +129,6 @@ function App() {
     <div className="app">
       <header className="app-header">
         <HeroGraphic />
-        <h1>Moodlist</h1>
-        <p>Transform any image into a playlist</p>
       </header>
 
       <main className="app-main">
