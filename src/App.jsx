@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import PhotoCapture from './components/PhotoCapture';
 import PlaylistDisplay from './components/PlaylistDisplay';
 import HeroGraphic from './components/HeroGraphic';
+import RecordLoader from './components/RecordLoader';
 import './App.css';
 
 // API is served from the same origin
@@ -181,10 +182,7 @@ function App() {
         )}
 
         {loading && (
-          <div className="loading-state">
-            <div className="spinner"></div>
-            <p>{loadingMessage}</p>
-          </div>
+          <RecordLoader message={loadingMessage} />
         )}
 
         {error && (

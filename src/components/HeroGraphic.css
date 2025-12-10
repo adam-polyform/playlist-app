@@ -8,7 +8,6 @@
 .hero-orb {
   position: fixed;
   border-radius: 50%;
-  filter: blur(120px);
   opacity: 0.5;
   pointer-events: none;
   z-index: -1;
@@ -19,8 +18,9 @@
   height: 500px;
   top: -150px;
   left: -100px;
-  background: radial-gradient(circle, #FF6B35 0%, transparent 70%);
+  background: radial-gradient(circle, #1DB954 0%, transparent 70%);
   animation: orbFloat1 8s ease-in-out infinite;
+  transition: filter 0.3s ease;
 }
 
 .hero-orb-2 {
@@ -30,6 +30,7 @@
   right: -100px;
   background: radial-gradient(circle, #1DB954 0%, transparent 70%);
   animation: orbFloat2 10s ease-in-out infinite;
+  transition: filter 0.3s ease;
 }
 
 .hero-orb-3 {
@@ -38,9 +39,10 @@
   top: 40%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, #F7931E 0%, transparent 70%);
+  background: radial-gradient(circle, #1ed760 0%, transparent 70%);
   opacity: 0.25;
   animation: orbFloat3 12s ease-in-out infinite;
+  transition: filter 0.3s ease;
 }
 
 @keyframes orbFloat1 {
@@ -105,7 +107,7 @@
 }
 
 .image-placeholder.sunset {
-  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFD93D 100%);
+  background: linear-gradient(135deg, #1DB954 0%, #1ed760 50%, #15a049 100%);
 }
 
 .card-tracks {

@@ -1,12 +1,42 @@
+import { useState, useEffect } from 'react';
 import './HeroGraphic.css';
 
 function HeroGraphic() {
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      const x = e.clientX / window.innerWidth;
+      const y = e.clientY / window.innerHeight;
+      setMousePos({ x, y });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Calculate blur based on mouse position (80px to 180px range)
+  const baseBlur = 120;
+  const blurRange = 60;
+  const blur1 = baseBlur + (mousePos.x * blurRange);
+  const blur2 = baseBlur + (mousePos.y * blurRange);
+  const blur3 = baseBlur + ((mousePos.x + mousePos.y) / 2 * blurRange);
+
   return (
     <div className="hero-section">
-      {/* Background gradient orbs */}
-      <div className="hero-orb hero-orb-1"></div>
-      <div className="hero-orb hero-orb-2"></div>
-      <div className="hero-orb hero-orb-3"></div>
+      {/* Background gradient orbs - interactive blur */}
+      <div
+        className="hero-orb hero-orb-1"
+        style={{ filter: `blur(${blur1}px)` }}
+      ></div>
+      <div
+        className="hero-orb hero-orb-2"
+        style={{ filter: `blur(${blur2}px)` }}
+      ></div>
+      <div
+        className="hero-orb hero-orb-3"
+        style={{ filter: `blur(${blur3}px)` }}
+      ></div>
 
       {/* Main flow: Photo → Logo → Playlist */}
       <div className="hero-flow">
@@ -41,9 +71,9 @@ function HeroGraphic() {
               <circle cx="36" cy="35" r="2" fill="#2a2a2a"/>
               <defs>
                 <linearGradient id="iconGradient" x1="8" y1="14" x2="48" y2="42" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#FF6B35"/>
-                  <stop offset="0.5" stopColor="#F7931E"/>
-                  <stop offset="1" stopColor="#FFD93D"/>
+                  <stop stopColor="#1DB954"/>
+                  <stop offset="0.5" stopColor="#1ed760"/>
+                  <stop offset="1" stopColor="#15a049"/>
                 </linearGradient>
               </defs>
             </svg>
