@@ -15,28 +15,37 @@ function HeroGraphic() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Calculate blur based on mouse position (80px to 180px range)
-  const baseBlur = 120;
-  const blurRange = 60;
-  const blur1 = baseBlur + (mousePos.x * blurRange);
-  const blur2 = baseBlur + (mousePos.y * blurRange);
-  const blur3 = baseBlur + ((mousePos.x + mousePos.y) / 2 * blurRange);
+  // Calculate distance from center (0 at center, 1 at corners)
+  const distX = (mousePos.x - 0.5) * 2;
+  const distY = (mousePos.y - 0.5) * 2;
+  const distFromCenter = Math.sqrt(distX * distX + distY * distY) / Math.sqrt(2);
+
+  // Blur increases with distance from center (60px at center, 160px at edges)
+  const blur = 60 + (distFromCenter * 100);
+
+  // Deformation based on mouse position
+  const scaleX = 1 + (distX * 0.15);
+  const scaleY = 1 + (distY * 0.15);
+  const offsetX = distX * 100;
+  const offsetY = distY * 100;
 
   return (
     <div className="hero-section">
-      {/* Background gradient orbs - interactive blur */}
+      {/* Interactive gradient orb */}
       <div
-        className="hero-orb hero-orb-1"
-        style={{ filter: `blur(${blur1}px)` }}
-      ></div>
-      <div
-        className="hero-orb hero-orb-2"
-        style={{ filter: `blur(${blur2}px)` }}
-      ></div>
-      <div
-        className="hero-orb hero-orb-3"
-        style={{ filter: `blur(${blur3}px)` }}
-      ></div>
+        className="hero-orb"
+        style={{
+          transform: `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`,
+          filter: `blur(${blur}px)`
+        }}
+      >
+        <div
+          className="hero-orb-inner"
+          style={{
+            transform: `scaleX(${scaleX}) scaleY(${scaleY})`
+          }}
+        />
+      </div>
 
       {/* Main flow: Photo → Logo → Playlist */}
       <div className="hero-flow">

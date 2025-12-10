@@ -37,12 +37,6 @@
   text-align: center;
 }
 
-/* Hover effect */
-.record-container:hover .vinyl-record {
-  animation-duration: 1s;
-  filter: drop-shadow(0 12px 40px rgba(29, 185, 84, 0.4));
-}
-
 /* Mobile - reduce tilt effect */
 @media (max-width: 480px) {
   .record-container {
