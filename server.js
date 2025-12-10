@@ -423,6 +423,135 @@ app.post('/api/create-playlist', async (req, res) => {
   }
 });
 
+// Generate more songs based on existing analysis
+app.post('/api/generate-more-songs', async (req, res) => {
+  try {
+    const { analysis, existingTracks } = req.body;
+
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
+    }
+
+    const existingSongs = existingTracks.map(t => `${t.name} by ${t.artist}`).join(', ');
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [
+          {
+            role: 'user',
+            content: `Based on this mood analysis, suggest 10 MORE songs that would fit the playlist.
+
+Mood: ${analysis.mood}
+Atmosphere: ${analysis.atmosphere}
+Themes: ${analysis.themes?.join(', ')}
+
+IMPORTANT: Do NOT suggest any of these songs that are already in the playlist:
+${existingSongs}
+
+Provide 10 NEW and DIFFERENT songs that match the same mood and atmosphere.
+
+Respond in this exact JSON format:
+{
+  "songs": [
+    {"title": "Song Title", "artist": "Artist Name"},
+    {"title": "Song Title", "artist": "Artist Name"}
+  ]
+}
+
+Only respond with the JSON, no other text.`
+          }
+        ]
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      return res.status(400).json({ error: data.error.message });
+    }
+
+    const content = data.content[0].text;
+    const parsed = JSON.parse(content);
+
+    // Search for the new tracks on Spotify
+    const token = await getSpotifyToken();
+    const existingIds = new Set(existingTracks.map(t => t.id));
+
+    const tracks = await Promise.all(
+      parsed.songs.map(async (song) => {
+        const query = encodeURIComponent(`track:${song.title} artist:${song.artist}`);
+        const searchResponse = await fetch(
+          `https://api.spotify.com/v1/search?q=${query}&type=track&limit=1`,
+          {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }
+        );
+
+        const searchData = await searchResponse.json();
+
+        if (searchData.tracks?.items?.length > 0) {
+          const track = searchData.tracks.items[0];
+          // Skip if already in playlist
+          if (existingIds.has(track.id)) return null;
+          return {
+            id: track.id,
+            name: track.name,
+            artist: track.artists.map(a => a.name).join(', '),
+            album: track.album.name,
+            albumArt: track.album.images[0]?.url,
+            previewUrl: track.preview_url,
+            spotifyUrl: track.external_urls.spotify,
+            uri: track.uri
+          };
+        }
+
+        // Fallback search
+        const fallbackQuery = encodeURIComponent(`${song.title} ${song.artist}`);
+        const fallbackResponse = await fetch(
+          `https://api.spotify.com/v1/search?q=${fallbackQuery}&type=track&limit=1`,
+          {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }
+        );
+
+        const fallbackData = await fallbackResponse.json();
+
+        if (fallbackData.tracks?.items?.length > 0) {
+          const track = fallbackData.tracks.items[0];
+          if (existingIds.has(track.id)) return null;
+          return {
+            id: track.id,
+            name: track.name,
+            artist: track.artists.map(a => a.name).join(', '),
+            album: track.album.name,
+            albumArt: track.album.images[0]?.url,
+            previewUrl: track.preview_url,
+            spotifyUrl: track.external_urls.spotify,
+            uri: track.uri
+          };
+        }
+
+        return null;
+      })
+    );
+
+    const validTracks = tracks.filter(t => t !== null);
+
+    res.json({ tracks: validTracks });
+  } catch (error) {
+    console.error('Error generating more songs:', error);
+    res.status(500).json({ error: 'Failed to generate more songs' });
+  }
+});
+
 // Logout
 app.post('/api/logout', (req, res) => {
   const sessionToken = req.headers['x-spotify-session'];

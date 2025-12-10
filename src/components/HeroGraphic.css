@@ -201,11 +201,12 @@
 
 .hero-title {
   font-family: 'Jacquard 12', serif;
-  font-size: 4.5rem;
+  font-size: 8rem;
   font-weight: 400;
   color: #ffffff;
   margin: 0 0 0.5rem;
   letter-spacing: 0.02em;
+  width: 100%;
   background: linear-gradient(135deg, #ffffff 0%, #a0a0a0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -247,7 +248,7 @@
   }
 
   .hero-title {
-    font-size: 3rem;
+    font-size: 4.5rem;
   }
 
   .hero-subtitle {

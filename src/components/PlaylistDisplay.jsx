@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './PlaylistDisplay.css';
 
-function PlaylistDisplay({ analysis, tracks, imagePreview, spotifyUser, onSpotifyLogin }) {
+function PlaylistDisplay({ analysis, tracks, imagePreview, spotifyUser, onSpotifyLogin, onAddMoreTracks, additionCount, addingMore }) {
   const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
   const [saving, setSaving] = useState(false);
   const [savedPlaylist, setSavedPlaylist] = useState(null);
@@ -131,6 +131,18 @@ function PlaylistDisplay({ analysis, tracks, imagePreview, spotifyUser, onSpotif
       <div className="playlist-footer">
         <p>{tracks.length} songs</p>
 
+        <div className="add-more-section">
+          {additionCount < 3 ? (
+            <button
+              className="add-more-button"
+              onClick={onAddMoreTracks}
+              disabled={addingMore}
+            >
+              {addingMore ? 'Adding songs...' : '+ Add More Songs'}
+            </button>
+          ) : null}
+        </div>
+
         <div className="save-section">
           {savedPlaylist ? (
             <a
@@ -142,20 +154,30 @@ function PlaylistDisplay({ analysis, tracks, imagePreview, spotifyUser, onSpotif
               Saved! Open in Spotify
             </a>
           ) : spotifyUser ? (
-            <button
-              className="save-button"
-              onClick={saveToSpotify}
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Save to Spotify'}
-            </button>
+            <div className="save-row">
+              <button
+                className="save-button"
+                onClick={saveToSpotify}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save to Spotify'}
+              </button>
+              {additionCount >= 3 && (
+                <span className="track-limit-message">Track Limit Reached</span>
+              )}
+            </div>
           ) : (
-            <button
-              className="connect-button"
-              onClick={onSpotifyLogin}
-            >
-              Connect Spotify to Save
-            </button>
+            <div className="save-row">
+              <button
+                className="connect-button"
+                onClick={onSpotifyLogin}
+              >
+                Connect Spotify to Save
+              </button>
+              {additionCount >= 3 && (
+                <span className="track-limit-message">Track Limit Reached</span>
+              )}
+            </div>
           )}
           {saveError && <p className="save-error">{saveError}</p>}
         </div>

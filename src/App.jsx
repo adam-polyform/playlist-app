@@ -16,6 +16,8 @@ function App() {
   const [tracks, setTracks] = useState([]);
   const [error, setError] = useState(null);
   const [spotifyUser, setSpotifyUser] = useState(null);
+  const [additionCount, setAdditionCount] = useState(0);
+  const [addingMore, setAddingMore] = useState(false);
 
   // Handle OAuth callback and check user status on mount
   useEffect(() => {
@@ -144,11 +146,41 @@ function App() {
     }
   };
 
+  const handleAddMoreTracks = async () => {
+    if (additionCount >= 3 || addingMore) return;
+
+    setAddingMore(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_URL}/api/generate-more-songs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ analysis, existingTracks: tracks })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate more songs');
+      }
+
+      const data = await response.json();
+      setTracks(prev => [...prev, ...data.tracks]);
+      setAdditionCount(prev => prev + 1);
+    } catch (err) {
+      console.error('Error adding more tracks:', err);
+      setError(err.message);
+    } finally {
+      setAddingMore(false);
+    }
+  };
+
   const handleReset = () => {
     setImagePreview(null);
     setAnalysis(null);
     setTracks([]);
     setError(null);
+    setAdditionCount(0);
   };
 
   return (
@@ -200,6 +232,9 @@ function App() {
               imagePreview={imagePreview}
               spotifyUser={spotifyUser}
               onSpotifyLogin={handleSpotifyLogin}
+              onAddMoreTracks={handleAddMoreTracks}
+              additionCount={additionCount}
+              addingMore={addingMore}
             />
             <button className="reset-button" onClick={handleReset}>
               Create Another
