@@ -16,8 +16,8 @@ function RecordLoader({ message }) {
   }, []);
 
   // Calculate tilt based on mouse position
-  const tiltX = mousePos.y * 15; // -15 to 15 degrees
-  const tiltY = mousePos.x * -15; // -15 to 15 degrees
+  const tiltX = mousePos.y * 30; // -30 to 30 degrees
+  const tiltY = mousePos.x * -30; // -30 to 30 degrees
 
   return (
     <div className="record-loader">
