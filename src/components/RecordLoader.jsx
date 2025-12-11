@@ -24,7 +24,7 @@ function RecordLoader({ message }) {
       <div
         className="record-container"
         style={{
-          transform: `perspective(500px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`
+          transform: `perspective(300px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`
         }}
       >
         <svg viewBox="0 0 200 200" className="vinyl-record">

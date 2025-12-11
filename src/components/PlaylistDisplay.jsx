@@ -140,7 +140,9 @@ function PlaylistDisplay({ analysis, tracks, imagePreview, spotifyUser, onSpotif
             >
               {addingMore ? 'Adding songs...' : '+ Add More Songs'}
             </button>
-          ) : null}
+          ) : (
+            <span className="track-limit-message">Track Limit Reached</span>
+          )}
         </div>
 
         <div className="save-section">
@@ -154,30 +156,20 @@ function PlaylistDisplay({ analysis, tracks, imagePreview, spotifyUser, onSpotif
               Saved! Open in Spotify
             </a>
           ) : spotifyUser ? (
-            <div className="save-row">
-              <button
-                className="save-button"
-                onClick={saveToSpotify}
-                disabled={saving}
-              >
-                {saving ? 'Saving...' : 'Save to Spotify'}
-              </button>
-              {additionCount >= 3 && (
-                <span className="track-limit-message">Track Limit Reached</span>
-              )}
-            </div>
+            <button
+              className="save-button"
+              onClick={saveToSpotify}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Save to Spotify'}
+            </button>
           ) : (
-            <div className="save-row">
-              <button
-                className="connect-button"
-                onClick={onSpotifyLogin}
-              >
-                Connect Spotify to Save
-              </button>
-              {additionCount >= 3 && (
-                <span className="track-limit-message">Track Limit Reached</span>
-              )}
-            </div>
+            <button
+              className="connect-button"
+              onClick={onSpotifyLogin}
+            >
+              Connect Spotify to Save
+            </button>
           )}
           {saveError && <p className="save-error">{saveError}</p>}
         </div>

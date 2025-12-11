@@ -186,7 +186,7 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <HeroGraphic />
+        <HeroGraphic isLoading={loading} />
       </header>
 
       <main className="app-main">
@@ -242,10 +242,6 @@ function App() {
           </>
         )}
       </main>
-
-      <footer className="app-footer">
-        <p>Powered by Claude & Spotify</p>
-      </footer>
     </div>
   );
 }
