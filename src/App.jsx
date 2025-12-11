@@ -3,6 +3,7 @@ import PhotoCapture from './components/PhotoCapture';
 import PlaylistDisplay from './components/PlaylistDisplay';
 import HeroGraphic from './components/HeroGraphic';
 import RecordLoader from './components/RecordLoader';
+import ShareButton from './components/ShareButton';
 import './App.css';
 
 // API is served from the same origin
@@ -242,6 +243,12 @@ function App() {
           </>
         )}
       </main>
+
+      <footer className="app-footer">
+        <p>Vibes by <a href="https://www.linkedin.com/in/adam-kyle-wilson/" target="_blank" rel="noopener noreferrer">Adam</a></p>
+      </footer>
+
+      <ShareButton />
     </div>
   );
 }

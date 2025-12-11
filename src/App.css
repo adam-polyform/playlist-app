@@ -187,6 +187,17 @@
   font-weight: 400;
 }
 
+.app-footer a {
+  color: #1DB954;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.app-footer a:hover {
+  color: #1ed760;
+  text-decoration: underline;
+}
+
 @media (max-width: 480px) {
   .app {
     padding: 2rem 1.25rem;
