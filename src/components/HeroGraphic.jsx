@@ -1,54 +1,83 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './HeroGraphic.css';
 
-// 8-bit Knight sprite (16x16 pixels scaled up)
-const KnightSprite = ({ frame, attacking, facingRight }) => (
+// Improved 8-bit Knight sprite (16x16 pixels)
+const KnightSprite = ({ frame, attacking, facingRight, dancing }) => (
   <svg
     viewBox="0 0 16 16"
-    className={`knight-sprite ${attacking ? 'attacking' : ''}`}
+    className={`knight-sprite ${attacking ? 'attacking' : ''} ${dancing ? 'dancing' : ''}`}
     style={{ transform: facingRight ? 'scaleX(1)' : 'scaleX(-1)' }}
   >
+    {/* Plume */}
+    <rect x="7" y="0" width="2" height="1" fill="#ff4444"/>
+    <rect x="8" y="1" width="1" height="1" fill="#ff4444"/>
     {/* Helmet */}
-    <rect x="5" y="1" width="6" height="3" fill="white"/>
-    <rect x="4" y="2" width="1" height="2" fill="white"/>
-    <rect x="11" y="2" width="1" height="2" fill="white"/>
-    <rect x="6" y="0" width="4" height="1" fill="white"/>
-    {/* Visor */}
-    <rect x="6" y="3" width="4" height="1" fill="#333"/>
-    {/* Body/Armor */}
-    <rect x="5" y="4" width="6" height="5" fill="white"/>
-    <rect x="4" y="5" width="1" height="3" fill="white"/>
-    <rect x="11" y="5" width="1" height="3" fill="white"/>
-    {/* Arms */}
-    <rect x="3" y="5" width="1" height="4" fill="white"/>
-    <rect x="12" y="5" width="1" height="4" fill="white"/>
+    <rect x="5" y="1" width="6" height="4" fill="white"/>
+    <rect x="4" y="2" width="1" height="3" fill="white"/>
+    <rect x="11" y="2" width="1" height="3" fill="white"/>
+    {/* Visor slit */}
+    <rect x="5" y="3" width="6" height="1" fill="#333"/>
+    {/* Helmet shine */}
+    <rect x="6" y="2" width="2" height="1" fill="#eee"/>
+    {/* Body armor */}
+    <rect x="5" y="5" width="6" height="4" fill="white"/>
+    <rect x="4" y="6" width="1" height="2" fill="white"/>
+    <rect x="11" y="6" width="1" height="2" fill="white"/>
+    {/* Chest detail */}
+    <rect x="7" y="6" width="2" height="2" fill="#ddd"/>
+    {/* Shield arm */}
+    <rect x="2" y="5" width="2" height="4" fill="#4488ff"/>
+    <rect x="3" y="6" width="1" height="2" fill="#88bbff"/>
     {/* Sword arm */}
     {attacking ? (
       <>
-        <rect x="13" y="4" width="3" height="1" fill="white"/>
-        <rect x="14" y="3" width="2" height="1" fill="#ccc"/>
-        <rect x="15" y="1" width="1" height="2" fill="#ccc"/>
+        <rect x="12" y="4" width="4" height="1" fill="#ffdd44"/>
+        <rect x="15" y="3" width="1" height="1" fill="#ffdd44"/>
+        <rect x="12" y="5" width="1" height="2" fill="white"/>
+      </>
+    ) : dancing ? (
+      <>
+        <rect x="12" y="3" width="1" height="3" fill="white"/>
+        <rect x="13" y="2" width="1" height="2" fill="#ffdd44"/>
       </>
     ) : (
       <>
-        <rect x="13" y="6" width="1" height="3" fill="#ccc"/>
-        <rect x="13" y="9" width="1" height="1" fill="white"/>
+        <rect x="12" y="6" width="1" height="3" fill="white"/>
+        <rect x="12" y="9" width="1" height="3" fill="#ffdd44"/>
       </>
     )}
-    {/* Legs - animate based on frame */}
-    {frame % 2 === 0 ? (
+    {/* Belt */}
+    <rect x="5" y="9" width="6" height="1" fill="#886644"/>
+    {/* Legs */}
+    {dancing ? (
+      frame % 4 < 2 ? (
+        <>
+          <rect x="4" y="10" width="2" height="4" fill="white"/>
+          <rect x="10" y="10" width="2" height="3" fill="white"/>
+          <rect x="4" y="14" width="2" height="2" fill="#666"/>
+          <rect x="11" y="13" width="2" height="2" fill="#666"/>
+        </>
+      ) : (
+        <>
+          <rect x="5" y="10" width="2" height="3" fill="white"/>
+          <rect x="9" y="10" width="2" height="4" fill="white"/>
+          <rect x="4" y="13" width="2" height="2" fill="#666"/>
+          <rect x="9" y="14" width="2" height="2" fill="#666"/>
+        </>
+      )
+    ) : frame % 2 === 0 ? (
       <>
-        <rect x="5" y="9" width="2" height="4" fill="white"/>
-        <rect x="9" y="9" width="2" height="4" fill="white"/>
-        <rect x="5" y="13" width="2" height="2" fill="#888"/>
-        <rect x="9" y="13" width="2" height="2" fill="#888"/>
+        <rect x="5" y="10" width="2" height="4" fill="white"/>
+        <rect x="9" y="10" width="2" height="4" fill="white"/>
+        <rect x="5" y="14" width="2" height="2" fill="#666"/>
+        <rect x="9" y="14" width="2" height="2" fill="#666"/>
       </>
     ) : (
       <>
-        <rect x="6" y="9" width="2" height="4" fill="white"/>
-        <rect x="8" y="9" width="2" height="4" fill="white"/>
-        <rect x="6" y="13" width="2" height="2" fill="#888"/>
-        <rect x="8" y="13" width="2" height="2" fill="#888"/>
+        <rect x="6" y="10" width="2" height="4" fill="white"/>
+        <rect x="8" y="10" width="2" height="4" fill="white"/>
+        <rect x="5" y="14" width="2" height="2" fill="#666"/>
+        <rect x="10" y="14" width="2" height="2" fill="#666"/>
       </>
     )}
   </svg>
@@ -57,25 +86,23 @@ const KnightSprite = ({ frame, attacking, facingRight }) => (
 // 8-bit Ghost sprite
 const GhostSprite = ({ frame }) => (
   <svg viewBox="0 0 16 16" className="ghost-sprite">
-    {/* Body */}
-    <rect x="4" y="2" width="8" height="8" fill="white" opacity="0.8"/>
-    <rect x="3" y="4" width="1" height="5" fill="white" opacity="0.8"/>
-    <rect x="12" y="4" width="1" height="5" fill="white" opacity="0.8"/>
-    {/* Eyes */}
+    <rect x="4" y="2" width="8" height="8" fill="white" opacity="0.85"/>
+    <rect x="3" y="4" width="1" height="5" fill="white" opacity="0.85"/>
+    <rect x="12" y="4" width="1" height="5" fill="white" opacity="0.85"/>
     <rect x="5" y="4" width="2" height="2" fill="#333"/>
     <rect x="9" y="4" width="2" height="2" fill="#333"/>
-    {/* Wavy bottom - animate */}
+    <rect x="6" y="7" width="4" height="1" fill="#333"/>
     {frame % 2 === 0 ? (
       <>
-        <rect x="4" y="10" width="2" height="3" fill="white" opacity="0.8"/>
-        <rect x="7" y="10" width="2" height="2" fill="white" opacity="0.8"/>
-        <rect x="10" y="10" width="2" height="3" fill="white" opacity="0.8"/>
+        <rect x="4" y="10" width="2" height="3" fill="white" opacity="0.85"/>
+        <rect x="7" y="10" width="2" height="2" fill="white" opacity="0.85"/>
+        <rect x="10" y="10" width="2" height="3" fill="white" opacity="0.85"/>
       </>
     ) : (
       <>
-        <rect x="4" y="10" width="2" height="2" fill="white" opacity="0.8"/>
-        <rect x="7" y="10" width="2" height="3" fill="white" opacity="0.8"/>
-        <rect x="10" y="10" width="2" height="2" fill="white" opacity="0.8"/>
+        <rect x="4" y="10" width="2" height="2" fill="white" opacity="0.85"/>
+        <rect x="7" y="10" width="2" height="3" fill="white" opacity="0.85"/>
+        <rect x="10" y="10" width="2" height="2" fill="white" opacity="0.85"/>
       </>
     )}
   </svg>
@@ -84,28 +111,22 @@ const GhostSprite = ({ frame }) => (
 // 8-bit Skeleton sprite
 const SkeletonSprite = ({ frame }) => (
   <svg viewBox="0 0 16 16" className="skeleton-sprite">
-    {/* Skull */}
     <rect x="5" y="1" width="6" height="4" fill="white"/>
     <rect x="4" y="2" width="1" height="2" fill="white"/>
     <rect x="11" y="2" width="1" height="2" fill="white"/>
-    {/* Eye sockets */}
     <rect x="6" y="2" width="2" height="2" fill="#333"/>
     <rect x="9" y="2" width="2" height="2" fill="#333"/>
-    {/* Jaw */}
+    <rect x="7" y="4" width="2" height="1" fill="#333"/>
     <rect x="6" y="5" width="4" height="1" fill="white"/>
-    {/* Ribcage */}
     <rect x="7" y="6" width="2" height="1" fill="white"/>
     <rect x="5" y="7" width="6" height="1" fill="white"/>
     <rect x="6" y="8" width="4" height="1" fill="white"/>
     <rect x="5" y="9" width="6" height="1" fill="white"/>
-    {/* Arms */}
     <rect x="3" y="7" width="2" height="1" fill="white"/>
     <rect x="11" y="7" width="2" height="1" fill="white"/>
     <rect x="2" y="8" width="1" height="3" fill="white"/>
     <rect x="13" y="8" width="1" height="3" fill="white"/>
-    {/* Pelvis */}
     <rect x="6" y="10" width="4" height="1" fill="white"/>
-    {/* Legs - animate */}
     {frame % 2 === 0 ? (
       <>
         <rect x="6" y="11" width="1" height="4" fill="white"/>
@@ -120,7 +141,7 @@ const SkeletonSprite = ({ frame }) => (
   </svg>
 );
 
-// Death animation sprite
+// Death effect
 const DeathSprite = ({ frame }) => (
   <svg viewBox="0 0 16 16" className="death-sprite">
     {frame < 2 && (
@@ -138,9 +159,43 @@ const DeathSprite = ({ frame }) => (
         <rect x="11" y="3" width="2" height="2" fill="white" opacity="0.6"/>
         <rect x="3" y="11" width="2" height="2" fill="white" opacity="0.6"/>
         <rect x="11" y="11" width="2" height="2" fill="white" opacity="0.6"/>
-        <rect x="7" y="7" width="2" height="2" fill="white" opacity="0.4"/>
       </>
     )}
+  </svg>
+);
+
+// 8-bit Lightning bolt component
+const Lightning8Bit = ({ segments }) => (
+  <svg className="lightning-bolt-8bit" viewBox="0 0 100 50" preserveAspectRatio="none">
+    {segments.map((seg, i) => (
+      <g key={i}>
+        {/* Pixelated bolt segments */}
+        <rect
+          x={seg.x - 1}
+          y={seg.y}
+          width="2"
+          height={seg.height}
+          fill="white"
+        />
+        {/* Glow pixels */}
+        <rect
+          x={seg.x - 2}
+          y={seg.y}
+          width="1"
+          height={seg.height}
+          fill="white"
+          opacity="0.4"
+        />
+        <rect
+          x={seg.x + 1}
+          y={seg.y}
+          width="1"
+          height={seg.height}
+          fill="white"
+          opacity="0.4"
+        />
+      </g>
+    ))}
   </svg>
 );
 
@@ -149,75 +204,128 @@ function HeroGraphic({ isLoading }) {
   const [motionPos, setMotionPos] = useState({ x: 0, y: 0 });
   const [useMotion, setUseMotion] = useState(false);
   const [showLightning, setShowLightning] = useState(false);
-  const [lightningPath, setLightningPath] = useState([]);
+  const [lightningSegments, setLightningSegments] = useState([]);
   const lightningTimeoutRef = useRef(null);
 
   // Game state
-  const [knight, setKnight] = useState({ x: 50, facingRight: true, frame: 0, attacking: false });
+  const [knight, setKnight] = useState({
+    x: 50,
+    facingRight: true,
+    frame: 0,
+    attacking: false,
+    dancing: false,
+    velocity: 0
+  });
   const [enemies, setEnemies] = useState([]);
   const [deathEffects, setDeathEffects] = useState([]);
+  const [score, setScore] = useState(0);
+  const [scoreFlash, setScoreFlash] = useState(false);
+  const [lastMilestone, setLastMilestone] = useState(0);
+  const keysPressed = useRef({ left: false, right: false, attack: false });
   const gameLoopRef = useRef(null);
   const enemySpawnRef = useRef(null);
 
-  // Generate random diagonal lightning path
-  const generateLightningPath = useCallback(() => {
+  // Generate 8-bit style lightning
+  const generateLightning = useCallback(() => {
     const segments = [];
-    const startX = Math.random() * 100;
-    const goingRight = Math.random() > 0.5;
-    let currentX = startX;
-    let currentY = 0;
-    const segmentHeight = 100 / (8 + Math.floor(Math.random() * 4));
+    let x = 20 + Math.random() * 60;
+    let y = 0;
+    const direction = Math.random() > 0.5 ? 1 : -1;
 
-    while (currentY < 100) {
-      const nextY = Math.min(currentY + segmentHeight, 100);
-      const drift = (Math.random() - 0.5) * 15 + (goingRight ? 5 : -5);
-      const nextX = Math.max(0, Math.min(100, currentX + drift));
-      segments.push({ x1: currentX, y1: currentY, x2: nextX, y2: nextY });
-      currentX = nextX;
-      currentY = nextY;
+    while (y < 50) {
+      const segHeight = 3 + Math.random() * 5;
+      segments.push({ x, y, height: segHeight });
+      y += segHeight;
+      x += (Math.random() * 8 - 4 + direction * 3);
+      x = Math.max(5, Math.min(95, x));
     }
     return segments;
   }, []);
 
-  // Lightning animation every 30 seconds
+  // Lightning every 30 seconds
   useEffect(() => {
     const triggerLightning = () => {
-      setLightningPath(generateLightningPath());
+      setLightningSegments(generateLightning());
       setShowLightning(true);
-
-      lightningTimeoutRef.current = setTimeout(() => {
-        setShowLightning(false);
-      }, 400);
+      lightningTimeoutRef.current = setTimeout(() => setShowLightning(false), 300);
     };
 
     const interval = setInterval(triggerLightning, 30000);
-
     return () => {
       clearInterval(interval);
-      if (lightningTimeoutRef.current) {
-        clearTimeout(lightningTimeoutRef.current);
-      }
+      if (lightningTimeoutRef.current) clearTimeout(lightningTimeoutRef.current);
     };
-  }, [generateLightningPath]);
+  }, [generateLightning]);
 
-  // Game loop for knight movement and combat
+  // Keyboard controls
   useEffect(() => {
-    let knightDirection = 1;
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft' || e.key === 'a') keysPressed.current.left = true;
+      if (e.key === 'ArrowRight' || e.key === 'd') keysPressed.current.right = true;
+      if (e.key === ' ' || e.key === 'ArrowUp') keysPressed.current.attack = true;
+    };
+
+    const handleKeyUp = (e) => {
+      if (e.key === 'ArrowLeft' || e.key === 'a') keysPressed.current.left = false;
+      if (e.key === 'ArrowRight' || e.key === 'd') keysPressed.current.right = false;
+      if (e.key === ' ' || e.key === 'ArrowUp') keysPressed.current.attack = false;
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
+  // Check for milestone (every 500 points)
+  useEffect(() => {
+    const currentMilestone = Math.floor(score / 500);
+    if (currentMilestone > lastMilestone && score > 0) {
+      setLastMilestone(currentMilestone);
+      // Knight dances
+      setKnight(prev => ({ ...prev, dancing: true }));
+      // Flash score
+      setScoreFlash(true);
+      // Kill all enemies
+      setEnemies(prev => {
+        prev.forEach(e => {
+          setDeathEffects(d => [...d, { id: Date.now() + Math.random(), x: e.x, frame: 0 }]);
+        });
+        return [];
+      });
+      // Reset after dance
+      setTimeout(() => {
+        setKnight(prev => ({ ...prev, dancing: false }));
+        setScoreFlash(false);
+      }, 2000);
+    }
+  }, [score, lastMilestone]);
+
+  // Game loop
+  useEffect(() => {
     let frameCount = 0;
 
     gameLoopRef.current = setInterval(() => {
       frameCount++;
 
+      // Update knight based on keyboard input
       setKnight(prev => {
-        let newX = prev.x + knightDirection * 0.5;
-        let newFacingRight = prev.facingRight;
+        if (prev.dancing) {
+          return { ...prev, frame: Math.floor(frameCount / 4) % 4 };
+        }
 
-        // Reverse at edges
-        if (newX > 90) {
-          knightDirection = -1;
+        let newX = prev.x;
+        let newFacingRight = prev.facingRight;
+        let isAttacking = keysPressed.current.attack;
+
+        if (keysPressed.current.left) {
+          newX = Math.max(5, prev.x - 1.5);
           newFacingRight = false;
-        } else if (newX < 10) {
-          knightDirection = 1;
+        }
+        if (keysPressed.current.right) {
+          newX = Math.min(95, prev.x + 1.5);
           newFacingRight = true;
         }
 
@@ -225,52 +333,70 @@ function HeroGraphic({ isLoading }) {
           ...prev,
           x: newX,
           facingRight: newFacingRight,
-          frame: Math.floor(frameCount / 8) % 2,
-          attacking: prev.attacking
+          frame: Math.floor(frameCount / 6) % 2,
+          attacking: isAttacking
         };
       });
 
-      // Check for combat
+      // Update enemies - they keep walking toward knight
       setEnemies(prevEnemies => {
-        const updatedEnemies = [];
-        let knightAttacking = false;
-
-        setKnight(prevKnight => {
-          prevEnemies.forEach(enemy => {
-            const distance = Math.abs(enemy.x - prevKnight.x);
-            if (distance < 8) {
-              // Knight attacks enemy
-              knightAttacking = true;
-              setDeathEffects(prev => [...prev, { id: Date.now() + Math.random(), x: enemy.x, frame: 0 }]);
-            } else {
-              // Move enemy toward knight
-              const moveDir = enemy.x < prevKnight.x ? 0.3 : -0.3;
-              updatedEnemies.push({ ...enemy, x: enemy.x + moveDir, frame: Math.floor(frameCount / 10) % 2 });
-            }
-          });
-          return { ...prevKnight, attacking: knightAttacking };
+        return prevEnemies.map(enemy => {
+          let newX = enemy.x;
+          // Move toward center of screen, then patrol
+          if (enemy.x < 10) {
+            newX = enemy.x + 0.4;
+          } else if (enemy.x > 90) {
+            newX = enemy.x - 0.4;
+          } else {
+            // Move toward knight position
+            setKnight(k => {
+              const dir = enemy.x < k.x ? 0.3 : -0.3;
+              newX = enemy.x + dir;
+              return k;
+            });
+          }
+          return { ...enemy, x: newX, frame: Math.floor(frameCount / 8) % 2 };
         });
+      });
 
-        return updatedEnemies;
+      // Combat check
+      setKnight(prevKnight => {
+        if (prevKnight.attacking || prevKnight.dancing) {
+          setEnemies(prevEnemies => {
+            const surviving = [];
+            prevEnemies.forEach(enemy => {
+              const distance = Math.abs(enemy.x - prevKnight.x);
+              if (distance < 10 && (prevKnight.attacking || prevKnight.dancing)) {
+                setDeathEffects(prev => [...prev, { id: Date.now() + Math.random(), x: enemy.x, frame: 0 }]);
+                if (!prevKnight.dancing) {
+                  setScore(s => s + 50);
+                }
+              } else {
+                surviving.push(enemy);
+              }
+            });
+            return surviving;
+          });
+        }
+        return prevKnight;
       });
 
       // Update death effects
       setDeathEffects(prev =>
         prev.map(d => ({ ...d, frame: d.frame + 1 })).filter(d => d.frame < 5)
       );
-
-    }, 100);
+    }, 50);
 
     return () => clearInterval(gameLoopRef.current);
   }, []);
 
-  // Spawn enemies randomly
+  // Spawn enemies
   useEffect(() => {
     const spawnEnemy = () => {
       const spawnLeft = Math.random() > 0.5;
       const isGhost = Math.random() > 0.5;
       setEnemies(prev => {
-        if (prev.length < 3) {
+        if (prev.length < 5) {
           return [...prev, {
             id: Date.now(),
             type: isGhost ? 'ghost' : 'skeleton',
@@ -282,116 +408,67 @@ function HeroGraphic({ isLoading }) {
       });
     };
 
-    enemySpawnRef.current = setInterval(spawnEnemy, 4000);
-    // Spawn first enemy after 2 seconds
-    setTimeout(spawnEnemy, 2000);
+    enemySpawnRef.current = setInterval(spawnEnemy, 3000);
+    setTimeout(spawnEnemy, 1000);
 
     return () => clearInterval(enemySpawnRef.current);
   }, []);
 
-  // Mouse movement handler
+  // Mouse/motion handlers
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!useMotion) {
-        const x = e.clientX / window.innerWidth;
-        const y = e.clientY / window.innerHeight;
-        setMousePos({ x, y });
+        setMousePos({ x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight });
       }
     };
-
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [useMotion]);
 
-  // Accelerometer/gyroscope handler
   useEffect(() => {
     const handleDeviceOrientation = (e) => {
       if (e.gamma !== null && e.beta !== null) {
         setUseMotion(true);
-        const x = (e.gamma + 45) / 90;
-        const y = (e.beta + 45) / 90;
         setMotionPos({
-          x: Math.max(0, Math.min(1, x)),
-          y: Math.max(0, Math.min(1, y))
+          x: Math.max(0, Math.min(1, (e.gamma + 45) / 90)),
+          y: Math.max(0, Math.min(1, (e.beta + 45) / 90))
         });
       }
     };
 
     if (typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission === 'function') {
-      // Will be triggered by user interaction elsewhere
-    } else {
+        typeof DeviceOrientationEvent.requestPermission !== 'function') {
       window.addEventListener('deviceorientation', handleDeviceOrientation);
     }
-
-    return () => {
-      window.removeEventListener('deviceorientation', handleDeviceOrientation);
-    };
+    return () => window.removeEventListener('deviceorientation', handleDeviceOrientation);
   }, []);
 
-  // Use motion data if available, otherwise use mouse
   const activePos = useMotion ? motionPos : mousePos;
-
-  // Calculate distance from center
   const distX = (activePos.x - 0.5) * 2;
   const distY = (activePos.y - 0.5) * 2;
   const distFromCenter = Math.sqrt(distX * distX + distY * distY) / Math.sqrt(2);
-
   const blur = 100 + (distFromCenter * 120);
   const scaleX = 1 + (distX * 0.15);
   const scaleY = 1 + (distY * 0.15);
   const offsetX = distX * 100;
   const offsetY = distY * 100;
 
-  // Export motion position for RecordLoader
   useEffect(() => {
     window.moodlistMotion = useMotion ? motionPos : null;
   }, [useMotion, motionPos]);
 
   return (
     <div className="hero-section">
-      {/* Full-page diagonal lightning */}
-      {showLightning && (
-        <svg className="lightning-bolt-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-          {lightningPath.map((seg, i) => (
-            <g key={i}>
-              {/* Main bolt */}
-              <line
-                x1={seg.x1}
-                y1={seg.y1}
-                x2={seg.x2}
-                y2={seg.y2}
-                stroke="white"
-                strokeWidth="0.8"
-              />
-              {/* Glow effect */}
-              <line
-                x1={seg.x1}
-                y1={seg.y1}
-                x2={seg.x2}
-                y2={seg.y2}
-                stroke="white"
-                strokeWidth="2"
-                opacity="0.3"
-              />
-              {/* Branch occasionally */}
-              {Math.random() > 0.7 && (
-                <line
-                  x1={seg.x2}
-                  y1={seg.y2}
-                  x2={seg.x2 + (Math.random() - 0.5) * 10}
-                  y2={seg.y2 + 5}
-                  stroke="white"
-                  strokeWidth="0.4"
-                  opacity="0.6"
-                />
-              )}
-            </g>
-          ))}
-        </svg>
-      )}
+      {/* Score Display */}
+      <div className={`game-score ${scoreFlash ? 'flash' : ''}`}>
+        <span className="score-label">SCORE</span>
+        <span className="score-value">{score.toString().padStart(6, '0')}</span>
+      </div>
 
-      {/* Interactive gradient orb */}
+      {/* 8-bit Lightning */}
+      {showLightning && <Lightning8Bit segments={lightningSegments} />}
+
+      {/* Gradient orb */}
       <div
         className="hero-orb"
         style={{
@@ -399,110 +476,77 @@ function HeroGraphic({ isLoading }) {
           filter: `blur(${blur}px)`
         }}
       >
-        <div
-          className="hero-orb-inner"
-          style={{
-            transform: `scaleX(${scaleX}) scaleY(${scaleY})`
-          }}
-        />
+        <div className="hero-orb-inner" style={{ transform: `scaleX(${scaleX}) scaleY(${scaleY})` }} />
       </div>
 
-      {/* Main flow: Photo → Logo → Playlist */}
+      {/* Flow diagram */}
       <div className="hero-flow">
         <div className="flow-item">
           <div className="preview-card">
-            <div className="card-image">
-              <div className="image-placeholder sunset"></div>
-            </div>
+            <div className="card-image"><div className="image-placeholder sunset"></div></div>
           </div>
           <span className="flow-label">Photo</span>
         </div>
-
         <div className="flow-arrow">
           <svg width="32" height="16" viewBox="0 0 32 16" fill="none">
             <path d="M0 8H28M28 8L20 2M28 8L20 14" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
-
         <div className="flow-item">
-          <div className="app-icon">
-            <span className="app-icon-letter">M</span>
-          </div>
+          <div className="app-icon"><span className="app-icon-letter">M</span></div>
           <span className="flow-label">Moodlist</span>
         </div>
-
         <div className="flow-arrow">
           <svg width="32" height="16" viewBox="0 0 32 16" fill="none">
             <path d="M0 8H28M28 8L20 2M28 8L20 14" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
-
         <div className="flow-item">
           <div className="preview-card">
             <div className="card-tracks">
-              <div className="mini-track">
-                <span className="track-dot"></span>
-                <div className="track-lines"><span></span><span></span></div>
-              </div>
-              <div className="mini-track">
-                <span className="track-dot"></span>
-                <div className="track-lines"><span></span><span></span></div>
-              </div>
-              <div className="mini-track">
-                <span className="track-dot"></span>
-                <div className="track-lines"><span></span><span></span></div>
-              </div>
+              <div className="mini-track"><span className="track-dot"></span><div className="track-lines"><span></span><span></span></div></div>
+              <div className="mini-track"><span className="track-dot"></span><div className="track-lines"><span></span><span></span></div></div>
+              <div className="mini-track"><span className="track-dot"></span><div className="track-lines"><span></span><span></span></div></div>
             </div>
           </div>
           <span className="flow-label">Playlist</span>
         </div>
       </div>
 
-      {/* Title below */}
+      {/* Title */}
       <div className="hero-text">
         <h1 className={`hero-title ${isLoading ? 'shimmer' : ''}`}>Moodlist</h1>
         <p className="hero-subtitle">Transform photos into playlists</p>
       </div>
 
-      {/* 8-bit Game Area */}
+      {/* Game Area */}
       <div className="game-area">
-        {/* Knight */}
-        <div
-          className="game-character knight"
-          style={{ left: `${knight.x}%` }}
-        >
+        <div className="game-character knight" style={{ left: `${knight.x}%` }}>
           <KnightSprite
             frame={knight.frame}
             attacking={knight.attacking}
             facingRight={knight.facingRight}
+            dancing={knight.dancing}
           />
         </div>
 
-        {/* Enemies */}
         {enemies.map(enemy => (
-          <div
-            key={enemy.id}
-            className="game-character enemy"
-            style={{ left: `${enemy.x}%` }}
-          >
-            {enemy.type === 'ghost' ? (
-              <GhostSprite frame={enemy.frame} />
-            ) : (
-              <SkeletonSprite frame={enemy.frame} />
-            )}
+          <div key={enemy.id} className="game-character enemy" style={{ left: `${enemy.x}%` }}>
+            {enemy.type === 'ghost' ? <GhostSprite frame={enemy.frame} /> : <SkeletonSprite frame={enemy.frame} />}
           </div>
         ))}
 
-        {/* Death effects */}
         {deathEffects.map(effect => (
-          <div
-            key={effect.id}
-            className="game-character death-effect"
-            style={{ left: `${effect.x}%` }}
-          >
+          <div key={effect.id} className="game-character death-effect" style={{ left: `${effect.x}%` }}>
             <DeathSprite frame={effect.frame} />
           </div>
         ))}
+      </div>
+
+      {/* Controls hint */}
+      <div className="game-controls-hint">
+        <span>← → to move</span>
+        <span>SPACE to attack</span>
       </div>
     </div>
   );
