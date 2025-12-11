@@ -82,10 +82,11 @@ Consider:
 - Any activities or emotions depicted
 - Cultural or thematic elements
 
-Based on your analysis, provide exactly 10 song recommendations that would complement this image as a playlist.
+Based on your analysis, provide exactly 10 song recommendations that would complement this image as a playlist. Also create a creative, short playlist title (2-5 words) that captures the essence of the image and mood.
 
 Respond in this exact JSON format:
 {
+  "playlistTitle": "Creative Playlist Title",
   "analysis": {
     "mood": "description of mood",
     "atmosphere": "description of atmosphere",

@@ -1,9 +1,10 @@
 .share-button-container {
   position: fixed;
   bottom: 24px;
-  left: 24px;
+  right: 24px;
   z-index: 1000;
   display: flex;
+  flex-direction: row-reverse;
   align-items: center;
   gap: 0;
 }
@@ -37,13 +38,14 @@
 
 .share-social-icons {
   display: flex;
+  flex-direction: row-reverse;
   align-items: center;
   gap: 0;
   background: #1DB954;
   border-radius: 28px;
   padding: 0;
-  margin-left: -28px;
-  padding-left: 36px;
+  margin-right: -28px;
+  padding-right: 36px;
   height: 56px;
   overflow: hidden;
   max-width: 0;
@@ -54,7 +56,7 @@
 .share-button-container.expanded .share-social-icons {
   max-width: 240px;
   opacity: 1;
-  padding-right: 12px;
+  padding-left: 12px;
 }
 
 .share-social-link {
@@ -104,7 +106,7 @@
 @media (max-width: 480px) {
   .share-button-container {
     bottom: 16px;
-    left: 16px;
+    right: 16px;
   }
 
   .share-button-main {
@@ -114,8 +116,8 @@
 
   .share-social-icons {
     height: 48px;
-    margin-left: -24px;
-    padding-left: 32px;
+    margin-right: -24px;
+    padding-right: 32px;
   }
 
   .share-social-link {

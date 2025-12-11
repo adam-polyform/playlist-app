@@ -19,6 +19,7 @@ function App() {
   const [spotifyUser, setSpotifyUser] = useState(null);
   const [additionCount, setAdditionCount] = useState(0);
   const [addingMore, setAddingMore] = useState(false);
+  const [playlistTitle, setPlaylistTitle] = useState('');
 
   // Handle OAuth callback and check user status on mount
   useEffect(() => {
@@ -38,11 +39,12 @@ function App() {
     const savedPlaylistState = localStorage.getItem('pending_playlist');
     if (savedPlaylistState) {
       try {
-        const { tracks: savedTracks, analysis: savedAnalysis, imagePreview: savedImage } = JSON.parse(savedPlaylistState);
+        const { tracks: savedTracks, analysis: savedAnalysis, imagePreview: savedImage, playlistTitle: savedTitle } = JSON.parse(savedPlaylistState);
         if (savedTracks && savedTracks.length > 0) {
           setTracks(savedTracks);
           setAnalysis(savedAnalysis);
           setImagePreview(savedImage);
+          setPlaylistTitle(savedTitle || '');
         }
       } catch (e) {
         console.error('Failed to restore playlist state:', e);
@@ -80,7 +82,8 @@ function App() {
       localStorage.setItem('pending_playlist', JSON.stringify({
         tracks,
         analysis,
-        imagePreview
+        imagePreview,
+        playlistTitle
       }));
     }
     window.location.href = '/auth/spotify';
@@ -104,6 +107,7 @@ function App() {
     setError(null);
     setAnalysis(null);
     setTracks([]);
+    setPlaylistTitle('');
 
     try {
       // Step 1: Analyze the image with Claude
@@ -121,6 +125,7 @@ function App() {
 
       const analysisData = await analyzeResponse.json();
       setAnalysis(analysisData.analysis);
+      setPlaylistTitle(analysisData.playlistTitle || 'My Moodlist');
 
       // Step 2: Search for tracks on Spotify
       setLoadingMessage('Finding the perfect songs...');
@@ -176,12 +181,17 @@ function App() {
     }
   };
 
+  const handleRemoveTrack = (trackId) => {
+    setTracks(prev => prev.filter(track => track.id !== trackId));
+  };
+
   const handleReset = () => {
     setImagePreview(null);
     setAnalysis(null);
     setTracks([]);
     setError(null);
     setAdditionCount(0);
+    setPlaylistTitle('');
   };
 
   return (
@@ -236,6 +246,9 @@ function App() {
               onAddMoreTracks={handleAddMoreTracks}
               additionCount={additionCount}
               addingMore={addingMore}
+              playlistTitle={playlistTitle}
+              onTitleChange={setPlaylistTitle}
+              onRemoveTrack={handleRemoveTrack}
             />
             <button className="reset-button" onClick={handleReset}>
               Create Another
