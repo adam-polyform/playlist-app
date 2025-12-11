@@ -77,6 +77,8 @@ function HeroGraphic({ isLoading }) {
   }, []);
 
   // Use motion data if available, otherwise use mouse
+  const activePos = useMotion ? motionPos : mousePos;
+
   // Calculate distance from center (0 at center, 1 at corners)
   const distX = (activePos.x - 0.5) * 2;
   const distY = (activePos.y - 0.5) * 2;
