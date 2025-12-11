@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 3001;
 const userTokens = new Map();
 
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '50mb' }));
 
 // Serve static files from the dist folder
 app.use(express.static(join(__dirname, 'dist')));
@@ -37,42 +37,113 @@ function getMediaType(dataUrl) {
   return 'image/jpeg';
 }
 
+// Helper function to extract JSON from response (handles markdown code blocks)
+function extractJSON(text) {
+  // Try direct parse first
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    // Try to extract from markdown code block
+    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[1].trim());
+    }
+    // Try to find JSON object in text
+    const objectMatch = text.match(/\{[\s\S]*\}/);
+    if (objectMatch) {
+      return JSON.parse(objectMatch[0]);
+    }
+    throw new Error('Could not extract JSON from response');
+  }
+}
+
+// Helper function to call Claude API with retry
+async function callClaudeWithRetry(body, maxRetries = 3) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': process.env.ANTHROPIC_API_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        // If overloaded, retry
+        if (data.error.type === 'overloaded_error' && attempt < maxRetries) {
+          console.log(`Claude API overloaded, retrying (attempt ${attempt}/${maxRetries})...`);
+          await new Promise(r => setTimeout(r, 1000 * attempt)); // Exponential backoff
+          continue;
+        }
+        throw new Error(data.error.message);
+      }
+
+      if (!data.content || !data.content[0] || !data.content[0].text) {
+        throw new Error('Invalid response structure from Claude API');
+      }
+
+      return data;
+    } catch (error) {
+      lastError = error;
+      console.error(`Attempt ${attempt} failed:`, error.message);
+
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 1000 * attempt));
+      }
+    }
+  }
+
+  throw lastError;
+}
+
 // Analyze image with Claude Vision API
 app.post('/api/analyze-image', async (req, res) => {
   try {
     const { imageData } = req.body;
+
+    if (!imageData) {
+      return res.status(400).json({ error: 'No image data provided' });
+    }
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return res.status(500).json({ error: 'ANTHROPIC_API_KEY not configured' });
     }
 
     const mediaType = getMediaType(imageData);
+    const base64Data = imageData.replace(/^data:image\/[\w+]+;base64,/, '');
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1024,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: mediaType,
-                  data: imageData.replace(/^data:image\/[\w+]+;base64,/, '')
-                }
-              },
-              {
-                type: 'text',
-                text: `Analyze this image and suggest music that would match its mood, atmosphere, and content.
+    // Validate base64 data
+    if (!base64Data || base64Data.length === 0) {
+      return res.status(400).json({ error: 'Invalid image data format' });
+    }
+
+    console.log(`Processing image: ${mediaType}, size: ${Math.round(base64Data.length / 1024)}KB`);
+
+    const data = await callClaudeWithRetry({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2048,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: mediaType,
+                data: base64Data
+              }
+            },
+            {
+              type: 'text',
+              text: `Analyze this image and suggest music that would match its mood, atmosphere, and content.
 
 Consider:
 - The overall mood (happy, melancholic, energetic, peaceful, romantic, mysterious, etc.)
@@ -84,7 +155,8 @@ Consider:
 
 Based on your analysis, provide exactly 10 song recommendations that would complement this image as a playlist. Also create a creative, short playlist title (2-5 words) that captures the essence of the image and mood.
 
-Respond in this exact JSON format:
+IMPORTANT: Respond with ONLY valid JSON, no markdown, no code blocks, no additional text.
+
 {
   "playlistTitle": "Creative Playlist Title",
   "analysis": {
@@ -96,30 +168,35 @@ Respond in this exact JSON format:
     {"title": "Song Title", "artist": "Artist Name"},
     {"title": "Song Title", "artist": "Artist Name"}
   ]
-}
-
-Only respond with the JSON, no other text.`
-              }
-            ]
-          }
-        ]
-      })
+}`
+            }
+          ]
+        }
+      ]
     });
 
-    const data = await response.json();
+    // Parse the response with robust JSON extraction
+    const content = data.content[0].text;
+    console.log('Claude response received, parsing JSON...');
 
-    if (data.error) {
-      return res.status(400).json({ error: data.error.message });
+    const parsed = extractJSON(content);
+
+    // Validate the response structure
+    if (!parsed.analysis || !parsed.songs || !Array.isArray(parsed.songs)) {
+      console.error('Invalid response structure:', JSON.stringify(parsed).substring(0, 200));
+      return res.status(500).json({ error: 'Invalid response format from AI' });
     }
 
-    // Parse the response
-    const content = data.content[0].text;
-    const parsed = JSON.parse(content);
+    // Ensure we have a playlist title
+    if (!parsed.playlistTitle) {
+      parsed.playlistTitle = 'My Moodlist';
+    }
 
+    console.log(`Successfully analyzed image: "${parsed.playlistTitle}" with ${parsed.songs.length} songs`);
     res.json(parsed);
   } catch (error) {
     console.error('Error analyzing image:', error);
-    res.status(500).json({ error: 'Failed to analyze image' });
+    res.status(500).json({ error: error.message || 'Failed to analyze image' });
   }
 });
 

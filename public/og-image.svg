@@ -1,28 +1,29 @@
 <svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Jacquard+12&amp;display=swap');
+    <style type="text/css">
+      @font-face {
+        font-family: 'Jacquard 12';
+        font-style: normal;
+        font-weight: 400;
+        src: url(https://fonts.gstatic.com/s/jacquard12/v1/H4clBXSHlxPHMdrz2aY-F5Gq.woff2) format('woff2');
+      }
     </style>
-  </defs>
-
-  <!-- Background -->
-  <rect width="1200" height="630" fill="#1DB954"/>
-
-  <!-- Subtle gradient overlay -->
-  <defs>
     <radialGradient id="glow" cx="50%" cy="50%" r="60%">
       <stop offset="0%" stop-color="#1ed760" stop-opacity="0.4"/>
       <stop offset="100%" stop-color="#1DB954" stop-opacity="0"/>
     </radialGradient>
   </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#1DB954"/>
   <rect width="1200" height="630" fill="url(#glow)"/>
 
-  <!-- Moodlist wordmark -->
+  <!-- Moodlist wordmark in Jacquard 12 -->
   <text
     x="600"
-    y="340"
+    y="330"
     font-family="'Jacquard 12', serif"
-    font-size="140"
+    font-size="160"
     fill="white"
     text-anchor="middle"
     dominant-baseline="middle"

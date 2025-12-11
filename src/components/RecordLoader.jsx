@@ -2,22 +2,41 @@ import { useState, useEffect } from 'react';
 import './RecordLoader.css';
 
 function RecordLoader({ message }) {
-  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [pos, setPos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const handleMouseMove = (e) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 2;
-      const y = (e.clientY / window.innerHeight - 0.5) * 2;
-      setMousePos({ x, y });
+      // Check if motion data is available from HeroGraphic
+      if (window.moodlistMotion) {
+        const x = (window.moodlistMotion.x - 0.5) * 2;
+        const y = (window.moodlistMotion.y - 0.5) * 2;
+        setPos({ x, y });
+      } else {
+        const x = (e.clientX / window.innerWidth - 0.5) * 2;
+        const y = (e.clientY / window.innerHeight - 0.5) * 2;
+        setPos({ x, y });
+      }
     };
 
+    // Also poll for motion data
+    const motionInterval = setInterval(() => {
+      if (window.moodlistMotion) {
+        const x = (window.moodlistMotion.x - 0.5) * 2;
+        const y = (window.moodlistMotion.y - 0.5) * 2;
+        setPos({ x, y });
+      }
+    }, 50);
+
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      clearInterval(motionInterval);
+    };
   }, []);
 
-  // Calculate tilt based on mouse position
-  const tiltX = mousePos.y * 30; // -30 to 30 degrees
-  const tiltY = mousePos.x * -30; // -30 to 30 degrees
+  // Calculate tilt based on position (mouse or motion)
+  const tiltX = pos.y * 30; // -30 to 30 degrees
+  const tiltY = pos.x * -30; // -30 to 30 degrees
 
   return (
     <div className="record-loader">
