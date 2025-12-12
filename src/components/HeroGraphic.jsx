@@ -164,35 +164,35 @@ const DeathSprite = ({ frame }) => (
   </svg>
 );
 
-// 8-bit Lightning bolt component
+// 8-bit Lightning bolt component - skinnier with varied structure
 const Lightning8Bit = ({ segments }) => (
   <svg className="lightning-bolt-8bit" viewBox="0 0 100 50" preserveAspectRatio="none">
     {segments.map((seg, i) => (
       <g key={i}>
-        {/* Pixelated bolt segments */}
+        {/* Main thin bolt - only 1px wide */}
         <rect
-          x={seg.x - 1}
+          x={seg.x}
           y={seg.y}
-          width="2"
+          width={seg.width || 1}
           height={seg.height}
           fill="white"
         />
-        {/* Glow pixels */}
+        {/* Subtle glow - very thin */}
         <rect
-          x={seg.x - 2}
+          x={seg.x - 0.5}
           y={seg.y}
-          width="1"
+          width="0.5"
           height={seg.height}
           fill="white"
-          opacity="0.4"
+          opacity="0.3"
         />
         <rect
-          x={seg.x + 1}
+          x={seg.x + (seg.width || 1)}
           y={seg.y}
-          width="1"
+          width="0.5"
           height={seg.height}
           fill="white"
-          opacity="0.4"
+          opacity="0.3"
         />
       </g>
     ))}
@@ -214,7 +214,9 @@ function HeroGraphic({ isLoading }) {
     frame: 0,
     attacking: false,
     dancing: false,
-    velocity: 0
+    velocity: 0,
+    autoWalk: true,
+    autoDirection: 1 // 1 = right, -1 = left
   });
   const [enemies, setEnemies] = useState([]);
   const [deathEffects, setDeathEffects] = useState([]);
@@ -222,10 +224,11 @@ function HeroGraphic({ isLoading }) {
   const [scoreFlash, setScoreFlash] = useState(false);
   const [lastMilestone, setLastMilestone] = useState(0);
   const keysPressed = useRef({ left: false, right: false, attack: false });
+  const lastUserInputTime = useRef(0);
   const gameLoopRef = useRef(null);
   const enemySpawnRef = useRef(null);
 
-  // Generate 8-bit style lightning
+  // Generate 8-bit style lightning - skinnier and more varied
   const generateLightning = useCallback(() => {
     const segments = [];
     let x = 20 + Math.random() * 60;
@@ -233,11 +236,29 @@ function HeroGraphic({ isLoading }) {
     const direction = Math.random() > 0.5 ? 1 : -1;
 
     while (y < 50) {
-      const segHeight = 3 + Math.random() * 5;
-      segments.push({ x, y, height: segHeight });
+      // More varied segment heights - some very short for jagged look
+      const segHeight = 1 + Math.random() * 4;
+      // Vary width slightly for more natural look (but keep thin)
+      const segWidth = Math.random() > 0.7 ? 1.5 : 1;
+      segments.push({ x, y, height: segHeight, width: segWidth });
       y += segHeight;
-      x += (Math.random() * 8 - 4 + direction * 3);
+      // More erratic horizontal movement for jagged appearance
+      const jag = Math.random() > 0.3 ? (Math.random() * 6 - 3) : (Math.random() * 12 - 6);
+      x += jag + direction * 2;
       x = Math.max(5, Math.min(95, x));
+
+      // Occasionally add branch
+      if (Math.random() > 0.85 && y < 40) {
+        let branchX = x;
+        let branchY = y;
+        const branchDir = Math.random() > 0.5 ? 1 : -1;
+        for (let j = 0; j < 3; j++) {
+          const branchHeight = 1 + Math.random() * 2;
+          segments.push({ x: branchX, y: branchY, height: branchHeight, width: 0.5 });
+          branchY += branchHeight;
+          branchX += branchDir * (2 + Math.random() * 3);
+        }
+      }
     }
     return segments;
   }, []);
@@ -260,15 +281,20 @@ function HeroGraphic({ isLoading }) {
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'ArrowLeft' || e.key === 'a') keysPressed.current.left = true;
-      if (e.key === 'ArrowRight' || e.key === 'd') keysPressed.current.right = true;
-      if (e.key === ' ' || e.key === 'ArrowUp') keysPressed.current.attack = true;
+      if (e.key === 'ArrowLeft' || e.key === 'a') {
+        keysPressed.current.left = true;
+        lastUserInputTime.current = Date.now();
+      }
+      if (e.key === 'ArrowRight' || e.key === 'd') {
+        keysPressed.current.right = true;
+        lastUserInputTime.current = Date.now();
+      }
+      // No longer need attack key - attack happens on collision
     };
 
     const handleKeyUp = (e) => {
       if (e.key === 'ArrowLeft' || e.key === 'a') keysPressed.current.left = false;
       if (e.key === 'ArrowRight' || e.key === 'd') keysPressed.current.right = false;
-      if (e.key === ' ' || e.key === 'ArrowUp') keysPressed.current.attack = false;
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -306,11 +332,16 @@ function HeroGraphic({ isLoading }) {
   // Game loop
   useEffect(() => {
     let frameCount = 0;
+    let knightPosRef = 50; // Track knight position for enemy movement
 
     gameLoopRef.current = setInterval(() => {
       frameCount++;
+      const now = Date.now();
+      const userControlling = keysPressed.current.left || keysPressed.current.right;
+      const timeSinceInput = now - lastUserInputTime.current;
+      const AUTO_WALK_DELAY = 2000; // Return to auto-walk after 2 seconds of no input
 
-      // Update knight based on keyboard input
+      // Update knight based on keyboard input or auto-walk
       setKnight(prev => {
         if (prev.dancing) {
           return { ...prev, frame: Math.floor(frameCount / 4) % 4 };
@@ -318,67 +349,100 @@ function HeroGraphic({ isLoading }) {
 
         let newX = prev.x;
         let newFacingRight = prev.facingRight;
-        let isAttacking = keysPressed.current.attack;
+        let newAutoWalk = prev.autoWalk;
+        let newAutoDirection = prev.autoDirection;
 
-        if (keysPressed.current.left) {
-          newX = Math.max(5, prev.x - 1.5);
-          newFacingRight = false;
+        if (userControlling) {
+          // User is controlling
+          newAutoWalk = false;
+          if (keysPressed.current.left) {
+            newX = Math.max(5, prev.x - 1.5);
+            newFacingRight = false;
+          }
+          if (keysPressed.current.right) {
+            newX = Math.min(95, prev.x + 1.5);
+            newFacingRight = true;
+          }
+        } else if (timeSinceInput > AUTO_WALK_DELAY || prev.autoWalk) {
+          // Auto-walk mode
+          newAutoWalk = true;
+          newX = prev.x + (prev.autoDirection * 0.5);
+          newFacingRight = prev.autoDirection > 0;
+
+          // Reverse direction at edges
+          if (newX >= 90) {
+            newAutoDirection = -1;
+            newFacingRight = false;
+          } else if (newX <= 10) {
+            newAutoDirection = 1;
+            newFacingRight = true;
+          }
+          newX = Math.max(5, Math.min(95, newX));
         }
-        if (keysPressed.current.right) {
-          newX = Math.min(95, prev.x + 1.5);
-          newFacingRight = true;
-        }
+
+        knightPosRef = newX;
 
         return {
           ...prev,
           x: newX,
           facingRight: newFacingRight,
           frame: Math.floor(frameCount / 6) % 2,
-          attacking: isAttacking
+          attacking: false, // Will be set by collision detection
+          autoWalk: newAutoWalk,
+          autoDirection: newAutoDirection
         };
       });
 
-      // Update enemies - they keep walking toward knight
+      // Update enemies - they continuously walk toward knight
       setEnemies(prevEnemies => {
         return prevEnemies.map(enemy => {
+          const speed = enemy.type === 'ghost' ? 0.35 : 0.3;
           let newX = enemy.x;
-          // Move toward center of screen, then patrol
-          if (enemy.x < 10) {
-            newX = enemy.x + 0.4;
-          } else if (enemy.x > 90) {
-            newX = enemy.x - 0.4;
+
+          // Always move toward knight position
+          if (enemy.x < knightPosRef) {
+            newX = enemy.x + speed;
           } else {
-            // Move toward knight position
-            setKnight(k => {
-              const dir = enemy.x < k.x ? 0.3 : -0.3;
-              newX = enemy.x + dir;
-              return k;
-            });
+            newX = enemy.x - speed;
           }
+
           return { ...enemy, x: newX, frame: Math.floor(frameCount / 8) % 2 };
         });
       });
 
-      // Combat check
+      // Auto-attack on collision
       setKnight(prevKnight => {
-        if (prevKnight.attacking || prevKnight.dancing) {
-          setEnemies(prevEnemies => {
-            const surviving = [];
-            prevEnemies.forEach(enemy => {
-              const distance = Math.abs(enemy.x - prevKnight.x);
-              if (distance < 10 && (prevKnight.attacking || prevKnight.dancing)) {
-                setDeathEffects(prev => [...prev, { id: Date.now() + Math.random(), x: enemy.x, frame: 0 }]);
-                if (!prevKnight.dancing) {
-                  setScore(s => s + 50);
-                }
-              } else {
-                surviving.push(enemy);
+        let isAttacking = false;
+
+        setEnemies(prevEnemies => {
+          const surviving = [];
+          prevEnemies.forEach(enemy => {
+            const distance = Math.abs(enemy.x - prevKnight.x);
+            if (distance < 8) {
+              // Auto-attack when enemy is close
+              isAttacking = true;
+              setDeathEffects(prev => [...prev, { id: Date.now() + Math.random(), x: enemy.x, frame: 0 }]);
+              if (!prevKnight.dancing) {
+                setScore(s => s + 50);
               }
+            } else {
+              surviving.push(enemy);
+            }
+          });
+          return surviving;
+        });
+
+        if (prevKnight.dancing) {
+          // Kill all enemies when dancing
+          setEnemies(prevEnemies => {
+            prevEnemies.forEach(enemy => {
+              setDeathEffects(prev => [...prev, { id: Date.now() + Math.random(), x: enemy.x, frame: 0 }]);
             });
-            return surviving;
+            return [];
           });
         }
-        return prevKnight;
+
+        return { ...prevKnight, attacking: isAttacking };
       });
 
       // Update death effects
@@ -493,8 +557,8 @@ function HeroGraphic({ isLoading }) {
           </svg>
         </div>
         <div className="flow-item">
-          <div className="app-icon"><span className="app-icon-letter">M</span></div>
-          <span className="flow-label">Moodlist</span>
+          <div className="app-icon"><span className="app-icon-letter">R</span></div>
+          <span className="flow-label">RelicRadio</span>
         </div>
         <div className="flow-arrow">
           <svg width="32" height="16" viewBox="0 0 32 16" fill="none">
@@ -515,7 +579,7 @@ function HeroGraphic({ isLoading }) {
 
       {/* Title */}
       <div className="hero-text">
-        <h1 className={`hero-title ${isLoading ? 'shimmer' : ''}`}>Moodlist</h1>
+        <h1 className={`hero-title ${isLoading ? 'shimmer' : ''}`}>RelicRadio</h1>
         <p className="hero-subtitle">Transform photos into playlists</p>
       </div>
 
@@ -546,7 +610,6 @@ function HeroGraphic({ isLoading }) {
       {/* Controls hint */}
       <div className="game-controls-hint">
         <span>← → to move</span>
-        <span>SPACE to attack</span>
       </div>
     </div>
   );
