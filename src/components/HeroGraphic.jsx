@@ -164,6 +164,46 @@ const DeathSprite = ({ frame }) => (
   </svg>
 );
 
+// 8-bit Bat sprite - flying enemy
+const BatSprite = ({ frame }) => (
+  <svg viewBox="0 0 16 16" className="bat-sprite">
+    {/* Body */}
+    <rect x="6" y="6" width="4" height="4" fill="#442266"/>
+    <rect x="7" y="5" width="2" height="1" fill="#442266"/>
+    {/* Eyes */}
+    <rect x="7" y="7" width="1" height="1" fill="#ff4444"/>
+    <rect x="9" y="7" width="1" height="1" fill="#ff4444"/>
+    {/* Ears */}
+    <rect x="6" y="4" width="1" height="2" fill="#442266"/>
+    <rect x="9" y="4" width="1" height="2" fill="#442266"/>
+    {/* Wings - animated */}
+    {frame % 2 === 0 ? (
+      <>
+        {/* Wings up */}
+        <rect x="2" y="4" width="4" height="1" fill="#553377"/>
+        <rect x="3" y="5" width="3" height="1" fill="#553377"/>
+        <rect x="4" y="6" width="2" height="2" fill="#553377"/>
+        <rect x="10" y="4" width="4" height="1" fill="#553377"/>
+        <rect x="10" y="5" width="3" height="1" fill="#553377"/>
+        <rect x="10" y="6" width="2" height="2" fill="#553377"/>
+      </>
+    ) : (
+      <>
+        {/* Wings down */}
+        <rect x="2" y="8" width="4" height="1" fill="#553377"/>
+        <rect x="3" y="7" width="3" height="1" fill="#553377"/>
+        <rect x="4" y="6" width="2" height="2" fill="#553377"/>
+        <rect x="10" y="8" width="4" height="1" fill="#553377"/>
+        <rect x="10" y="7" width="3" height="1" fill="#553377"/>
+        <rect x="10" y="6" width="2" height="2" fill="#553377"/>
+      </>
+    )}
+    {/* Fangs */}
+    <rect x="7" y="9" width="1" height="1" fill="white"/>
+    <rect x="9" y="9" width="1" height="1" fill="white"/>
+  </svg>
+);
+
 // 8-bit Lightning bolt component - skinnier with varied structure
 const Lightning8Bit = ({ segments }) => (
   <svg className="lightning-bolt-8bit" viewBox="0 0 100 50" preserveAspectRatio="none">
@@ -396,7 +436,8 @@ function HeroGraphic({ isLoading }) {
       // Update enemies - they continuously walk toward knight
       setEnemies(prevEnemies => {
         return prevEnemies.map(enemy => {
-          const speed = enemy.type === 'ghost' ? 0.35 : 0.3;
+          // Bats are fastest, ghosts medium, skeletons slowest
+          const speed = enemy.type === 'bat' ? 0.45 : enemy.type === 'ghost' ? 0.35 : 0.3;
           let newX = enemy.x;
 
           // Always move toward knight position
@@ -458,12 +499,14 @@ function HeroGraphic({ isLoading }) {
   useEffect(() => {
     const spawnEnemy = () => {
       const spawnLeft = Math.random() > 0.5;
-      const isGhost = Math.random() > 0.5;
+      // Random enemy type: ghost, skeleton, or bat
+      const rand = Math.random();
+      const enemyType = rand < 0.33 ? 'ghost' : rand < 0.66 ? 'skeleton' : 'bat';
       setEnemies(prev => {
         if (prev.length < 5) {
           return [...prev, {
             id: Date.now(),
-            type: isGhost ? 'ghost' : 'skeleton',
+            type: enemyType,
             x: spawnLeft ? -5 : 105,
             frame: 0
           }];
@@ -596,7 +639,9 @@ function HeroGraphic({ isLoading }) {
 
         {enemies.map(enemy => (
           <div key={enemy.id} className="game-character enemy" style={{ left: `${enemy.x}%` }}>
-            {enemy.type === 'ghost' ? <GhostSprite frame={enemy.frame} /> : <SkeletonSprite frame={enemy.frame} />}
+            {enemy.type === 'ghost' ? <GhostSprite frame={enemy.frame} /> :
+             enemy.type === 'bat' ? <BatSprite frame={enemy.frame} /> :
+             <SkeletonSprite frame={enemy.frame} />}
           </div>
         ))}
 
