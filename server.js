@@ -15,6 +15,8 @@ const PORT = process.env.PORT || 3001;
 
 // Store user tokens in memory (in production, use a database/session store)
 const userTokens = new Map();
+// Store OAuth state tokens for CSRF protection
+const oauthStates = new Map();
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -307,6 +309,10 @@ app.get('/auth/spotify', (req, res) => {
   const state = crypto.randomBytes(16).toString('hex');
   const scope = 'playlist-modify-public playlist-modify-private user-read-private';
 
+  // Store state for CSRF validation (expires in 10 minutes)
+  oauthStates.set(state, { createdAt: Date.now(), redirectUri });
+  setTimeout(() => oauthStates.delete(state), 10 * 60 * 1000);
+
   console.log('Redirect URI:', redirectUri); // Debug log
 
   const params = new URLSearchParams({
@@ -322,18 +328,25 @@ app.get('/auth/spotify', (req, res) => {
 
 // Spotify OAuth - Handle callback
 app.get('/auth/spotify/callback', async (req, res) => {
-  const { code, error } = req.query;
+  const { code, error, state } = req.query;
 
   if (error) {
     return res.redirect('/?auth_error=' + encodeURIComponent(error));
   }
 
+  // Validate state parameter for CSRF protection
+  const storedState = oauthStates.get(state);
+  if (!state || !storedState) {
+    console.error('Invalid OAuth state - possible CSRF attack');
+    return res.redirect('/?auth_error=invalid_state');
+  }
+  oauthStates.delete(state); // Use state only once
+
   try {
     const clientId = process.env.SPOTIFY_CLIENT_ID;
     const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-    // Use x-forwarded-proto header for apps behind a proxy (like Render)
-    const protocol = req.get('x-forwarded-proto') || req.protocol;
-    const redirectUri = `${protocol}://${req.get('host')}/auth/spotify/callback`;
+    // Use the stored redirect URI to ensure consistency
+    const redirectUri = storedState.redirectUri;
 
     const response = await fetch('https://accounts.spotify.com/api/token', {
       method: 'POST',

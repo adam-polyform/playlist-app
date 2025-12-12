@@ -164,43 +164,43 @@ const DeathSprite = ({ frame }) => (
   </svg>
 );
 
-// 8-bit Bat sprite - flying enemy
+// 8-bit Bat sprite - flying enemy (white)
 const BatSprite = ({ frame }) => (
   <svg viewBox="0 0 16 16" className="bat-sprite">
     {/* Body */}
-    <rect x="6" y="6" width="4" height="4" fill="#442266"/>
-    <rect x="7" y="5" width="2" height="1" fill="#442266"/>
+    <rect x="6" y="6" width="4" height="4" fill="white"/>
+    <rect x="7" y="5" width="2" height="1" fill="white"/>
     {/* Eyes */}
     <rect x="7" y="7" width="1" height="1" fill="#ff4444"/>
     <rect x="9" y="7" width="1" height="1" fill="#ff4444"/>
     {/* Ears */}
-    <rect x="6" y="4" width="1" height="2" fill="#442266"/>
-    <rect x="9" y="4" width="1" height="2" fill="#442266"/>
+    <rect x="6" y="4" width="1" height="2" fill="white"/>
+    <rect x="9" y="4" width="1" height="2" fill="white"/>
     {/* Wings - animated */}
     {frame % 2 === 0 ? (
       <>
         {/* Wings up */}
-        <rect x="2" y="4" width="4" height="1" fill="#553377"/>
-        <rect x="3" y="5" width="3" height="1" fill="#553377"/>
-        <rect x="4" y="6" width="2" height="2" fill="#553377"/>
-        <rect x="10" y="4" width="4" height="1" fill="#553377"/>
-        <rect x="10" y="5" width="3" height="1" fill="#553377"/>
-        <rect x="10" y="6" width="2" height="2" fill="#553377"/>
+        <rect x="2" y="4" width="4" height="1" fill="#ddd"/>
+        <rect x="3" y="5" width="3" height="1" fill="#ddd"/>
+        <rect x="4" y="6" width="2" height="2" fill="#ddd"/>
+        <rect x="10" y="4" width="4" height="1" fill="#ddd"/>
+        <rect x="10" y="5" width="3" height="1" fill="#ddd"/>
+        <rect x="10" y="6" width="2" height="2" fill="#ddd"/>
       </>
     ) : (
       <>
         {/* Wings down */}
-        <rect x="2" y="8" width="4" height="1" fill="#553377"/>
-        <rect x="3" y="7" width="3" height="1" fill="#553377"/>
-        <rect x="4" y="6" width="2" height="2" fill="#553377"/>
-        <rect x="10" y="8" width="4" height="1" fill="#553377"/>
-        <rect x="10" y="7" width="3" height="1" fill="#553377"/>
-        <rect x="10" y="6" width="2" height="2" fill="#553377"/>
+        <rect x="2" y="8" width="4" height="1" fill="#ddd"/>
+        <rect x="3" y="7" width="3" height="1" fill="#ddd"/>
+        <rect x="4" y="6" width="2" height="2" fill="#ddd"/>
+        <rect x="10" y="8" width="4" height="1" fill="#ddd"/>
+        <rect x="10" y="7" width="3" height="1" fill="#ddd"/>
+        <rect x="10" y="6" width="2" height="2" fill="#ddd"/>
       </>
     )}
     {/* Fangs */}
-    <rect x="7" y="9" width="1" height="1" fill="white"/>
-    <rect x="9" y="9" width="1" height="1" fill="white"/>
+    <rect x="7" y="9" width="1" height="1" fill="#ccc"/>
+    <rect x="9" y="9" width="1" height="1" fill="#ccc"/>
   </svg>
 );
 

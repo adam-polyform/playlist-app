@@ -173,7 +173,7 @@
 
 /* Bat sprite animation */
 .bat-sprite {
-  filter: drop-shadow(0 0 6px rgba(100, 50, 150, 0.5));
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
   animation: batFly 0.3s ease-in-out infinite;
 }
 
