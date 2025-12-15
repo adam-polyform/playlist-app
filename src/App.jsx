@@ -73,7 +73,7 @@ function App() {
     }
   };
 
-  const handleSpotifyLogin = () => {
+  const handleSpotifyLogin = async () => {
     // Save current playlist state before redirecting to OAuth
     if (tracks.length > 0) {
       localStorage.setItem('pending_playlist', JSON.stringify({
@@ -83,7 +83,25 @@ function App() {
         playlistTitle
       }));
     }
-    window.location.href = '/auth/spotify';
+
+    try {
+      // Fetch the auth URL from server, then navigate directly
+      // This avoids server-side redirects that can trigger browser security warnings
+      const response = await fetch(`${API_URL}/api/spotify-auth-url`, {
+        credentials: 'include'
+      });
+      const data = await response.json();
+
+      if (data.authUrl) {
+        // Direct navigation to Spotify - no intermediate redirects
+        window.location.href = data.authUrl;
+      } else {
+        setError('Failed to get Spotify authorization URL');
+      }
+    } catch (err) {
+      console.error('Failed to get Spotify auth URL:', err);
+      setError('Failed to connect to Spotify');
+    }
   };
 
   const handleSpotifyLogout = async () => {

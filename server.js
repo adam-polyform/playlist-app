@@ -311,8 +311,9 @@ app.post('/api/search-tracks', async (req, res) => {
   }
 });
 
-// Spotify OAuth - Start authorization
-app.get('/auth/spotify', (req, res) => {
+// Spotify OAuth - Get authorization URL (returns URL for client-side navigation)
+// This avoids server-side redirects which can trigger browser security warnings
+app.get('/api/spotify-auth-url', (req, res) => {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   // Use x-forwarded-proto header for apps behind a proxy (like Render)
   const protocol = req.get('x-forwarded-proto') || req.protocol;
@@ -334,7 +335,8 @@ app.get('/auth/spotify', (req, res) => {
     state: state
   });
 
-  res.redirect(`https://accounts.spotify.com/authorize?${params.toString()}`);
+  // Return the URL instead of redirecting - client will navigate directly
+  res.json({ authUrl: `https://accounts.spotify.com/authorize?${params.toString()}` });
 });
 
 // Spotify OAuth - Handle callback
