@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import crypto from 'crypto';
+import cookieParser from 'cookie-parser';
 
 dotenv.config();
 
@@ -18,7 +19,17 @@ const userTokens = new Map();
 // Store OAuth state tokens for CSRF protection
 const oauthStates = new Map();
 
+// Security headers middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json({ limit: '50mb' }));
 
 // Serve static files from the dist folder
@@ -191,7 +202,7 @@ IMPORTANT: Respond with ONLY valid JSON, no markdown, no code blocks, no additio
 
     // Ensure we have a playlist title
     if (!parsed.playlistTitle) {
-      parsed.playlistTitle = 'My Moodlist';
+      parsed.playlistTitle = 'My RelicRadio Playlist';
     }
 
     console.log(`Successfully analyzed image: "${parsed.playlistTitle}" with ${parsed.songs.length} songs`);
@@ -385,17 +396,32 @@ app.get('/auth/spotify/callback', async (req, res) => {
       displayName: profile.display_name
     });
 
-    // Redirect back to app with session token
-    res.redirect(`/?spotify_session=${sessionToken}`);
+    // Set session token as HTTP-only secure cookie (not accessible via JavaScript)
+    const isProduction = process.env.NODE_ENV === 'production' || req.get('x-forwarded-proto') === 'https';
+    res.cookie('spotify_session', sessionToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/'
+    });
+
+    // Redirect back to app (no token in URL)
+    res.redirect('/?spotify_connected=true');
   } catch (error) {
     console.error('OAuth callback error:', error);
     res.redirect('/?auth_error=callback_failed');
   }
 });
 
+// Helper to get session token from cookie or header (for backwards compatibility)
+function getSessionToken(req) {
+  return req.cookies?.spotify_session || req.headers['x-spotify-session'];
+}
+
 // Check user authentication status
 app.get('/api/user-status', (req, res) => {
-  const sessionToken = req.headers['x-spotify-session'];
+  const sessionToken = getSessionToken(req);
 
   if (!sessionToken || !userTokens.has(sessionToken)) {
     return res.json({ authenticated: false });
@@ -452,7 +478,7 @@ async function refreshTokenIfNeeded(sessionToken) {
 
 // Create playlist and add tracks
 app.post('/api/create-playlist', async (req, res) => {
-  const sessionToken = req.headers['x-spotify-session'];
+  const sessionToken = getSessionToken(req);
   const { name, description, trackUris } = req.body;
 
   if (!sessionToken) {
@@ -475,8 +501,8 @@ app.post('/api/create-playlist', async (req, res) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name: name || 'Moodlist Playlist',
-          description: description || 'Created with Moodlist',
+          name: name || 'RelicRadio Playlist',
+          description: description || 'Created with RelicRadio',
           public: false
         })
       }
@@ -645,10 +671,12 @@ Only respond with the JSON, no other text.`
 
 // Logout
 app.post('/api/logout', (req, res) => {
-  const sessionToken = req.headers['x-spotify-session'];
+  const sessionToken = getSessionToken(req);
   if (sessionToken) {
     userTokens.delete(sessionToken);
   }
+  // Clear the session cookie
+  res.clearCookie('spotify_session', { path: '/' });
   res.json({ success: true });
 });
 

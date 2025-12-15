@@ -24,14 +24,14 @@ function App() {
   // Handle OAuth callback and check user status on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const sessionToken = urlParams.get('spotify_session');
+    const spotifyConnected = urlParams.get('spotify_connected');
     const authError = urlParams.get('auth_error');
 
     if (authError) {
       setError(`Spotify login failed: ${authError}`);
       window.history.replaceState({}, '', '/');
-    } else if (sessionToken) {
-      localStorage.setItem('spotify_session', sessionToken);
+    } else if (spotifyConnected) {
+      // Clean URL after successful OAuth
       window.history.replaceState({}, '', '/');
     }
 
@@ -53,23 +53,20 @@ function App() {
       localStorage.removeItem('pending_playlist');
     }
 
-    // Check if user is already logged in
-    const storedSession = localStorage.getItem('spotify_session');
-    if (storedSession) {
-      checkUserStatus(storedSession);
-    }
+    // Check if user is logged in (cookie-based, so just check the API)
+    checkUserStatus();
   }, []);
 
-  const checkUserStatus = async (sessionToken) => {
+  const checkUserStatus = async () => {
     try {
       const response = await fetch(`${API_URL}/api/user-status`, {
-        headers: { 'x-spotify-session': sessionToken }
+        credentials: 'include' // Include cookies
       });
       const data = await response.json();
       if (data.authenticated) {
         setSpotifyUser(data);
       } else {
-        localStorage.removeItem('spotify_session');
+        setSpotifyUser(null);
       }
     } catch (err) {
       console.error('Failed to check user status:', err);
@@ -90,14 +87,10 @@ function App() {
   };
 
   const handleSpotifyLogout = async () => {
-    const sessionToken = localStorage.getItem('spotify_session');
-    if (sessionToken) {
-      await fetch(`${API_URL}/api/logout`, {
-        method: 'POST',
-        headers: { 'x-spotify-session': sessionToken }
-      });
-    }
-    localStorage.removeItem('spotify_session');
+    await fetch(`${API_URL}/api/logout`, {
+      method: 'POST',
+      credentials: 'include' // Include cookies
+    });
     setSpotifyUser(null);
   };
 
@@ -115,6 +108,7 @@ function App() {
       const analyzeResponse = await fetch(`${API_URL}/api/analyze-image`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ imageData })
       });
 
@@ -125,13 +119,14 @@ function App() {
 
       const analysisData = await analyzeResponse.json();
       setAnalysis(analysisData.analysis);
-      setPlaylistTitle(analysisData.playlistTitle || 'My Moodlist');
+      setPlaylistTitle(analysisData.playlistTitle || 'My RelicRadio Playlist');
 
       // Step 2: Search for tracks on Spotify
       setLoadingMessage('Finding the perfect songs...');
       const searchResponse = await fetch(`${API_URL}/api/search-tracks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ songs: analysisData.songs })
       });
 
@@ -162,6 +157,7 @@ function App() {
       const response = await fetch(`${API_URL}/api/generate-more-songs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ analysis, existingTracks: tracks })
       });
 
